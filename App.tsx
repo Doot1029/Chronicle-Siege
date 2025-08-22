@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import type { GameState, GameSettings, Player, Theme, Quest } from './types';
-import { GameStatus, GameMode } from './types';
+import { GameStatus } from './types';
 import GameSetup from './components/GameSetup';
 import GameView from './components/GameView';
 import WritersBlockShop from './components/WritersBlockShop';
@@ -10,23 +10,10 @@ import BrainstormJournalModal from './components/BrainstormJournalModal';
 import GameOverView from './components/GameOverView';
 import IntermissionView from './components/IntermissionView';
 
-import { discordService } from './services/discordService';
-import P2PService from './services/p2pService';
-import type { User as DiscordUser, Participant } from './types/discord';
-
-
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [activeTheme, setActiveTheme] = useState<Theme>(THEMES[0]);
   const [showJournal, setShowJournal] = useState(false);
-  
-  // Online mode state
-  const [gameMode, setGameMode] = useState<GameMode>(GameMode.OFFLINE);
-  const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [p2p, setP2p] = useState<P2PService | null>(null);
-  const [isHost, setIsHost] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   // Apply theme class to the body element for global styling
   useEffect(() => {
@@ -39,88 +26,10 @@ const App: React.FC = () => {
     body.classList.add(activeTheme.className);
   }, [activeTheme]);
 
-  // Initialize Discord SDK and P2P connection
-  useEffect(() => {
-    const initOnlineMode = async () => {
-      try {
-        await discordService.initialize();
-        const auth = await discordService.authenticate();
-        const currentParticipants = await discordService.getParticipants();
-        
-        // Determine host (e.g., first participant sorted by ID)
-        const sortedParticipants = [...currentParticipants].sort((a, b) => a.id.localeCompare(b.id));
-        const host = sortedParticipants[0];
-        
-        if (!host) {
-            throw new Error("No participants found in the voice channel.");
-        }
-        
-        const hostId = host.id;
-        const currentIsHost = auth.user.id === hostId;
-
-        setDiscordUser(auth.user);
-        setParticipants(sortedParticipants);
-        setGameMode(GameMode.ONLINE);
-        setIsHost(currentIsHost);
-
-        const p2pService = new P2PService(hostId); // Use hostId as the unique game ID
-        p2pService.init(auth.user.id, currentIsHost);
-        setP2p(p2pService);
-      } catch (error) {
-        console.warn("Could not initialize Discord SDK. Falling back to offline mode.", error);
-        setGameMode(GameMode.OFFLINE);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    // Check if running in an iframe, which is how Discord Activities are served
-    if (window.self !== window.top) {
-      initOnlineMode();
-    } else {
-        setIsLoading(false); // Not in Discord, just start in offline mode
-    }
-    
-    return () => {
-        p2p?.close();
-    };
-  }, []);
-
-  // P2P Listeners for clients to receive game state updates
-  useEffect(() => {
-    if (!p2p || isHost) return;
-
-    const handleGameStateUpdate = (newState: GameState) => {
-      setGameState(newState);
-    };
-    
-    p2p.on('game_state_update', handleGameStateUpdate);
-
-    return () => {
-      p2p.off('game_state_update', handleGameStateUpdate);
-    };
-  }, [p2p, isHost]);
-  
-  // Wrapper to update and broadcast state
-  // Only the host or an offline player can call this directly.
-  const updateAndBroadcastState = (newState: GameState | null) => {
-    setGameState(newState);
-    if (gameMode === GameMode.ONLINE && isHost && p2p && newState) {
-      p2p.broadcast('game_state_update', newState);
-    }
-  };
-
-
   const handleGameStart = useCallback((settings: GameSettings) => {
-    if (gameMode === GameMode.ONLINE && !isHost) return;
-
-    const playerSource = gameMode === GameMode.ONLINE 
-        ? participants 
-        : settings.playerNames.map((name, i) => ({ id: `p${i+1}`, global_name: name }));
-
-    const initialPlayers: Player[] = playerSource.map((p, index) => ({
-      id: p.id,
-      name: p.global_name || `Player ${index + 1}`,
+    const initialPlayers: Player[] = settings.playerNames.map((name, index) => ({
+      id: `p${index + 1}`,
+      name: name || `Player ${index + 1}`,
       hearts: 3,
       maxHearts: 3,
       coins: 0,
@@ -129,7 +38,7 @@ const App: React.FC = () => {
       inventory: [],
       theme: THEMES[0],
       feedback: [],
-      characters: settings.initialCharacters[p.global_name || `Player ${index + 1}`] || [{ name: `Character ${index + 1}`, bio: '' }],
+      characters: settings.initialCharacters[name || `Player ${index + 1}`] || [{ name: `Character ${index + 1}`, bio: '' }],
       activeCharacterIndex: 0,
       rebirthPoints: 0,
     }));
@@ -145,12 +54,9 @@ const App: React.FC = () => {
         return acc;
     }, {} as Record<string, string[]>);
     
-    const hostId = gameMode === GameMode.ONLINE ? participants.sort((a,b) => a.id.localeCompare(b.id))[0].id : null;
-
-    updateAndBroadcastState({
-      gameId: hostId || 'offline',
+    setGameState({
       status: GameStatus.INTERMISSION,
-      settings: { ...settings, players: initialPlayers, hostId },
+      settings: { ...settings, players: initialPlayers },
       story: settings.initialText,
       currentPlayerIndex: 0,
       monster: null,
@@ -163,38 +69,38 @@ const App: React.FC = () => {
       storyBible: 'This is the story bible. The host can add important world-building details, character backstories, and established lore here.',
       limboState: null,
     });
-  }, [gameMode, isHost, participants, p2p]);
+  }, []);
 
   const handleOpenShop = useCallback(() => {
     if (gameState) {
-      updateAndBroadcastState({ ...gameState, status: GameStatus.SHOP });
+      setGameState({ ...gameState, status: GameStatus.SHOP });
     }
-  }, [gameState, isHost, p2p, gameMode]);
+  }, [gameState]);
 
   const handleExitShop = useCallback((updatedPlayers: Player[]) => {
     if (gameState) {
-        updateAndBroadcastState({ 
+        setGameState({ 
             ...gameState, 
             status: GameStatus.PLAYING,
             settings: { ...gameState.settings, players: updatedPlayers }
         });
     }
-  }, [gameState, isHost, p2p, gameMode]);
+  }, [gameState]);
   
   const handleStartTurn = useCallback(() => {
     if (!gameState) return;
-    updateAndBroadcastState({ ...gameState, status: GameStatus.PLAYING });
-  }, [gameState, isHost, p2p, gameMode]);
+    setGameState({ ...gameState, status: GameStatus.PLAYING });
+  }, [gameState]);
   
   const handlePauseGame = useCallback(() => {
       if (!gameState) return;
-      updateAndBroadcastState({ ...gameState, status: GameStatus.PAUSED });
-  }, [gameState, isHost, p2p, gameMode]);
+      setGameState({ ...gameState, status: GameStatus.PAUSED });
+  }, [gameState]);
 
   const handleResumeGame = useCallback(() => {
       if (!gameState) return;
-      updateAndBroadcastState({ ...gameState, status: GameStatus.PLAYING });
-  }, [gameState, isHost, p2p, gameMode]);
+      setGameState({ ...gameState, status: GameStatus.PLAYING });
+  }, [gameState]);
 
   const handleThemeChange = useCallback((theme: Theme) => {
     setActiveTheme(theme);
@@ -219,10 +125,10 @@ const App: React.FC = () => {
               settings: { ...prev.settings, players: updatedPlayers },
               brainstormingJournal: updatedJournal
           };
-          updateAndBroadcastState(newState);
+          setGameState(newState);
           return newState; // for local update
       });
-  }, [isHost, p2p, gameMode]);
+  }, []);
 
   const handleCreateQuest = useCallback((questData: Omit<Quest, 'id' | 'progress' | 'isComplete'>) => {
       setGameState(prev => {
@@ -234,19 +140,19 @@ const App: React.FC = () => {
               isComplete: false,
           };
           const newState = { ...prev, quests: [...prev.quests, newQuest] };
-          updateAndBroadcastState(newState);
+          setGameState(newState);
           return newState;
       });
-  }, [isHost, p2p, gameMode]);
+  }, []);
 
   const handleUpdateStoryBible = useCallback((newBibleText: string) => {
     setGameState(prev => {
         if (!prev) return null;
         const newState = { ...prev, storyBible: newBibleText };
-        updateAndBroadcastState(newState);
+        setGameState(newState);
         return newState;
     });
-  }, [isHost, p2p, gameMode]);
+  }, []);
 
   const handleChangeCharacter = useCallback((playerIndex: number, characterIndex: number) => {
     setGameState(prev => {
@@ -254,10 +160,10 @@ const App: React.FC = () => {
       const updatedPlayers = [...prev.settings.players];
       updatedPlayers[playerIndex] = { ...updatedPlayers[playerIndex], activeCharacterIndex: characterIndex };
       const newState = { ...prev, settings: { ...prev.settings, players: updatedPlayers }};
-      updateAndBroadcastState(newState);
+      setGameState(newState);
       return newState;
     });
-  }, [isHost, p2p, gameMode]);
+  }, []);
 
   const handleExportToFile = (content: string, filename: string) => {
     const element = document.createElement("a");
@@ -294,16 +200,9 @@ const App: React.FC = () => {
 
 
   const renderContent = () => {
-    if (isLoading) {
-        return <div className="text-center p-10">Loading Chronicle Siege...</div>;
-    }
-    
     if (!gameState || gameState.status === GameStatus.SETUP) {
       return <GameSetup 
         onGameStart={handleGameStart} 
-        gameMode={gameMode}
-        participants={participants}
-        isHost={isHost}
         />;
     }
     
@@ -323,13 +222,12 @@ const App: React.FC = () => {
       return <WritersBlockShop 
         players={gameState.settings.players}
         onExit={handleExitShop}
-        hostId={gameState.settings.hostId || ''}
       />;
     }
     
     return <GameView 
       gameState={gameState} 
-      setGameState={updateAndBroadcastState} 
+      setGameState={setGameState} 
       onOpenShop={handleOpenShop}
       onThemeChange={handleThemeChange}
       onOpenJournal={() => setShowJournal(true)}
@@ -340,12 +238,11 @@ const App: React.FC = () => {
       onChangeCharacter={handleChangeCharacter}
       onExportBible={handleExportBible}
       onExportJournal={handleExportJournal}
-      discordUser={discordUser}
     />;
   };
 
   return (
-    <div className="min-h-screen">
+    <div>
        {showJournal && gameState && (
         <BrainstormJournalModal 
             journal={gameState.brainstormingJournal} 
@@ -353,7 +250,7 @@ const App: React.FC = () => {
             onClose={() => setShowJournal(false)}
         />
       )}
-      <main className="container mx-auto p-4 sm:p-6 lg:p-8 font-sans">
+      <main className="container font-sans">
         {renderContent()}
       </main>
     </div>

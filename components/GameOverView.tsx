@@ -22,24 +22,24 @@ const GameOverView: React.FC<GameOverViewProps> = ({ story, players }) => {
   const isDefeat = players.every(p => p.hearts === 0);
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-surface rounded-xl shadow-2xl animate-fade-in text-center">
-      <h1 className="text-4xl sm:text-5xl font-bold text-primary font-serif">
+    <div className="card animate-fade-in" style={{maxWidth: '48rem', margin: 'auto', textAlign: 'center'}}>
+      <h1 className="font-serif" style={{fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--color-primary)'}}>
         {isDefeat ? 'The Chronicle Ends...' : 'Chronicle Complete!'}
       </h1>
-      <p className="text-text-secondary mt-4 text-lg">
+      <p style={{color: 'var(--color-text-secondary)', marginTop: '1rem', fontSize: '1.125rem'}}>
         {isDefeat 
           ? "Your party has fallen, but your collaborative story will be remembered."
           : "Congratulations to all writers for weaving this epic tale together. Your journey has come to an end, but the story will live on."
         }
       </p>
 
-      <div className="my-8 bg-background p-4 rounded-lg">
-        <h2 className="text-2xl font-semibold text-secondary mb-4">Final Party</h2>
-        <div className="flex flex-wrap justify-center gap-4">
+      <div style={{margin: '2rem 0', backgroundColor: 'var(--color-background)', padding: '1rem', borderRadius: '0.5rem'}}>
+        <h2 className="font-serif" style={{fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-secondary)', marginBottom: '1rem'}}>Final Party</h2>
+        <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '1rem'}}>
           {players.map(player => (
-            <div key={player.id} className="p-3 bg-surface/50 rounded-md">
-              <p className="font-bold">{player.name}</p>
-              <p className="text-sm text-text-secondary">Level {player.level}</p>
+            <div key={player.id} style={{padding: '0.75rem', backgroundColor: 'var(--color-surface)', borderRadius: '0.375rem'}}>
+              <p style={{fontWeight: 'bold'}}>{player.name}</p>
+              <p style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)'}}>Level {player.level}</p>
             </div>
           ))}
         </div>
@@ -47,7 +47,8 @@ const GameOverView: React.FC<GameOverViewProps> = ({ story, players }) => {
 
       <button
         onClick={handleExport}
-        className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 bg-primary text-white font-bold py-4 px-6 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-primary transition-transform transform hover:scale-105"
+        className="btn btn-primary"
+        style={{maxWidth: '24rem', margin: 'auto'}}
       >
         <ExportIcon className="w-6 h-6" />
         Export Your Story

@@ -14,17 +14,17 @@ const QuestLogModal: React.FC<QuestLogModalProps> = ({ quests, players, currentP
     const myQuests = quests.filter(q => q.assigneeId === 'all' || q.assigneeId === currentPlayerId);
     
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-surface rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 animate-slide-in border-2 border-yellow-500 h-[80vh] flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-yellow-400 font-serif flex items-center gap-2">
+        <div className="modal-overlay">
+            <div className="modal-content size-lg tall" style={{borderColor: '#FBBF24'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+                    <h2 className="font-serif" style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                         <QuestIcon className="w-7 h-7" />
                         Quest Log
                     </h2>
-                    <button onClick={onClose} className="text-2xl text-text-secondary hover:text-white">&times;</button>
+                    <button onClick={onClose} style={{fontSize: '1.5rem', color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer'}}>&times;</button>
                 </div>
                 
-                <div className="flex-grow overflow-y-auto mt-4 pr-2 space-y-4">
+                <div style={{flexGrow: 1, overflowY: 'auto', marginTop: '1rem', paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1rem'}}>
                     {myQuests.length > 0 ? myQuests.map(quest => {
                         const progress = quest.progress[currentPlayerId] || 0;
                         const target = quest.targetWordCount || 1;
@@ -32,40 +32,40 @@ const QuestLogModal: React.FC<QuestLogModalProps> = ({ quests, players, currentP
                         const assignee = quest.assigneeId === 'all' ? 'All Players' : players.find(p => p.id === quest.assigneeId)?.name;
 
                         return (
-                             <div key={quest.id} className={`bg-background p-4 rounded-lg border-l-4 ${quest.isComplete ? 'border-green-500 opacity-70' : 'border-yellow-600'}`}>
-                                <div className="flex justify-between items-start">
+                             <div key={quest.id} style={{backgroundColor: 'var(--color-background)', padding: '1rem', borderRadius: '0.5rem', borderLeft: `4px solid ${quest.isComplete ? '#22C55E' : '#F59E0B'}`, opacity: quest.isComplete ? 0.7 : 1}}>
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
                                     <div>
-                                        <h3 className="font-bold text-lg text-secondary">{quest.title}</h3>
-                                        <p className="text-xs text-text-secondary">Assigned to: {assignee}</p>
+                                        <h3 style={{fontWeight: 'bold', fontSize: '1.125rem', color: 'var(--color-secondary)'}}>{quest.title}</h3>
+                                        <p style={{fontSize: '0.75rem', color: 'var(--color-text-secondary)'}}>Assigned to: {assignee}</p>
                                     </div>
-                                    <div className="flex items-center gap-3 text-sm">
-                                        <div className="flex items-center gap-1 text-yellow-400">
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem'}}>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#FBBF24'}}>
                                             <CoinIcon className="w-4 h-4" />
                                             <span>{quest.rewardCoins}</span>
                                         </div>
-                                        <div className="flex items-center gap-1 text-green-400">
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#34D399'}}>
                                             <LevelUpIcon className="w-4 h-4" />
                                             <span>{quest.rewardXp} XP</span>
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-sm text-text-secondary my-2">{quest.description}</p>
+                                <p style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', margin: '0.5rem 0'}}>{quest.description}</p>
                                 {quest.targetWordCount && (
                                     <div>
-                                        <div className="flex justify-between text-xs text-text-secondary mb-1">
+                                        <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginBottom: '0.25rem'}}>
                                             <span>Progress</span>
                                             <span>{progress} / {target} words</span>
                                         </div>
-                                        <div className="w-full bg-surface rounded-full h-2.5 border border-gray-600">
-                                            <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: `${percentage}%` }}></div>
+                                        <div style={{width: '100%', backgroundColor: 'var(--color-surface)', borderRadius: '9999px', height: '0.625rem', border: '1px solid var(--color-border)'}}>
+                                            <div style={{backgroundColor: '#F59E0B', height: '100%', borderRadius: '9999px', width: `${percentage}%`}}></div>
                                         </div>
                                     </div>
                                 )}
-                                {quest.isComplete && <p className="text-green-400 font-bold text-sm mt-2 text-right">Completed!</p>}
+                                {quest.isComplete && <p style={{color: '#4ADE80', fontWeight: 'bold', fontSize: '0.875rem', marginTop: '0.5rem', textAlign: 'right'}}>Completed!</p>}
                             </div>
                         );
                     }) : (
-                        <p className="text-text-secondary italic mt-4 text-center">You have no active quests.</p>
+                        <p style={{color: 'var(--color-text-secondary)', fontStyle: 'italic', marginTop: '1rem', textAlign: 'center'}}>You have no active quests.</p>
                     )}
                 </div>
             </div>

@@ -14,7 +14,6 @@ import CreateQuestModal from './CreateQuestModal';
 import GameManualModal from './GameManualModal';
 import StoryBibleModal from './StoryBibleModal';
 import CharacterSwitcherModal from './CharacterSwitcherModal';
-import type { User as DiscordUser } from '../types/discord';
 
 interface GameViewProps {
   gameState: GameState;
@@ -29,13 +28,12 @@ interface GameViewProps {
   onChangeCharacter: (playerIndex: number, characterIndex: number) => void;
   onExportBible: () => void;
   onExportJournal: () => void;
-  discordUser: DiscordUser | null;
 }
 
 const GameView: React.FC<GameViewProps> = ({ 
     gameState, setGameState, onOpenShop, onThemeChange, onOpenJournal, 
     onBrainstormSubmit, onCreateQuest, onUpdateStoryBible, onPauseGame, onChangeCharacter,
-    onExportBible, onExportJournal, discordUser
+    onExportBible, onExportJournal
 }) => {
   const [writing, setWriting] = useState('');
   const [brainstormText, setBrainstormText] = useState('');
@@ -53,8 +51,8 @@ const GameView: React.FC<GameViewProps> = ({
   const storyEndRef = useRef<HTMLDivElement>(null);
 
   const currentPlayer = gameState.settings.players[gameState.currentPlayerIndex];
-  const isMyTurn = gameState.status === GameStatus.PLAYING && (!discordUser || currentPlayer.id === discordUser.id);
-  const isHost = !discordUser || gameState.settings.hostId === discordUser.id;
+  const isMyTurn = gameState.status === GameStatus.PLAYING;
+  const isHost = true;
 
   const activeCharacter = currentPlayer.characters[currentPlayer.activeCharacterIndex];
   const previousPlayerIndex = (gameState.currentPlayerIndex - 1 + gameState.settings.players.length) % gameState.settings.players.length;
@@ -298,7 +296,7 @@ const GameView: React.FC<GameViewProps> = ({
             maxHp: Math.floor(monsterData.maxHp * difficultySettings.monsterHpMultiplier),
             currentHp: Math.floor(monsterData.maxHp * difficultySettings.monsterHpMultiplier),
             imageUrl: imageUrl,
-            locationId: gameState.playerPositions[gameState.settings.hostId!],
+            locationId: gameState.playerPositions[currentPlayer.id],
         };
         setGameState({ ...gameState, monster: newMonster });
         setBattleLog(prev => [`A wild ${newMonster.name} appears at ${gameState.settings.locations.find(l => l.id === newMonster.locationId)?.name}!`, ...prev].slice(0,5));
@@ -307,7 +305,7 @@ const GameView: React.FC<GameViewProps> = ({
     } finally {
         setIsMonsterSpawning(false);
     }
-  }, [gameState, setGameState, isMonsterSpawning, difficultySettings.monsterHpMultiplier]);
+  }, [gameState, setGameState, isMonsterSpawning, difficultySettings.monsterHpMultiplier, currentPlayer]);
 
   useEffect(() => {
     if(isHost && gameState.turn > 3 && gameState.turn % 5 === 0 && !gameState.monster && !isMonsterSpawning){
@@ -384,7 +382,7 @@ const GameView: React.FC<GameViewProps> = ({
     
     const handleGetInspiration = async () => {
         const word = await getInspirationWord(gameState.story);
-        setModalContent({ title: 'Inspiration Spark', body: `Your word is: <strong class="text-2xl text-primary">${word}</strong>`, isHtml: true });
+        setModalContent({ title: 'Inspiration Spark', body: `Your word is: <strong style="font-size: 1.5rem; color: var(--color-primary);">${word}</strong>`, isHtml: true });
         setShowModal(true);
     };
 
@@ -399,7 +397,7 @@ const GameView: React.FC<GameViewProps> = ({
 
         const highlightedText = await highlightComplexSentences(lastEntry);
         const formattedHtml = highlightedText
-            .replace(/{{highlight}}/g, '<mark class="bg-secondary/30 text-text-main">')
+            .replace(/{{highlight}}/g, '<mark style="background-color: var(--color-secondary_opacity_30, rgba(236, 72, 153, 0.3)); color: var(--color-text-main);">')
             .replace(/{{\/highlight}}/g, '</mark>');
         
         setModalContent({ title: 'Word Weave Analysis', body: formattedHtml, isHtml: true });
@@ -407,10 +405,10 @@ const GameView: React.FC<GameViewProps> = ({
     };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="game-view-grid">
        {showModal && (
         <Modal title={modalContent.title} onClose={() => setShowModal(false)}>
-          {modalContent.isHtml ? <div dangerouslySetInnerHTML={{ __html: modalContent.body }} /> : modalContent.body}
+          {modalContent.isHtml ? <div dangerouslySetInnerHTML={{ __html: modalContent.body }} /> : <p>{modalContent.body}</p>}
         </Modal>
        )}
        
@@ -460,62 +458,63 @@ const GameView: React.FC<GameViewProps> = ({
           />
       )}
       {/* Left Column: Story */}
-      <div className="lg:col-span-8 space-y-4">
-        <div className="bg-surface p-6 rounded-lg shadow-lg h-[60vh] overflow-y-auto">
-          <div className="flex justify-between items-center border-b-2 border-primary pb-2 mb-4">
-            <h2 className="text-2xl font-bold font-serif">The Chronicle</h2>
-            <div className="flex items-center gap-2">
-                <button onClick={() => openModal('bible')} title="Story Bible" className="text-text-secondary hover:text-primary transition-colors"><BookOpenIcon className="w-6 h-6"/></button>
-                <button onClick={onPauseGame} title="Pause Game" className="text-text-secondary hover:text-primary transition-colors" disabled={!isHost}><PauseIcon className="w-6 h-6"/></button>
+      <div className="game-view-main">
+        <div className="card story-display">
+          <div className="story-display-header">
+            <h2 className="font-serif">The Chronicle</h2>
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                <button onClick={() => openModal('bible')} title="Story Bible" className="btn-icon"><BookOpenIcon className="w-6 h-6"/></button>
+                <button onClick={onPauseGame} title="Pause Game" className="btn-icon" disabled={!isHost}><PauseIcon className="w-6 h-6"/></button>
             </div>
           </div>
-          <div className="prose prose-invert max-w-none text-text-secondary font-serif leading-loose whitespace-pre-wrap">
+          <div className="prose prose-invert font-serif">
             {gameState.story}
             <div ref={storyEndRef} />
           </div>
         </div>
-        <div className="bg-surface p-4 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-primary">
+        <div className="turn-box">
+          <div className="turn-box-header">
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+              <h3>
                 Your Turn: {currentPlayer.name} (as {activeCharacter.name})
               </h3>
-               <button onClick={() => openModal('characterSwitcher')} title="Switch Character" className="text-text-secondary hover:text-primary transition-colors" disabled={!isMyTurn}><SwitchHorizontalIcon className="w-5 h-5"/></button>
+               <button onClick={() => openModal('characterSwitcher')} title="Switch Character" className="btn-icon" disabled={!isMyTurn}><SwitchHorizontalIcon className="w-5 h-5"/></button>
             </div>
-            <button onClick={() => openModal('manual')} title="Game Manual" className="text-text-secondary hover:text-primary transition-colors"><QuestionMarkCircleIcon className="w-6 h-6"/></button>
+            <button onClick={() => openModal('manual')} title="Game Manual" className="btn-icon"><QuestionMarkCircleIcon className="w-6 h-6"/></button>
           </div>
           <textarea
-            className="w-full h-40 p-4 bg-background border border-gray-600 rounded-lg text-lg font-serif focus:ring-2 focus:ring-primary focus:border-primary transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="form-textarea turn-textarea font-serif"
             placeholder={isMyTurn ? (isPlayerAtMonsterLocation ? 'Write to attack, or move to escape!' : 'Continue the story...') : 'Waiting for your turn...'}
             value={writing}
             onChange={(e) => setWriting(e.target.value)}
             disabled={!isMyTurn}
           />
-          <div className="flex justify-between items-center mt-2 text-text-secondary">
-            <div className="flex items-center gap-2">
+          <div className="turn-footer">
+            <div className="turn-actions">
                {currentPlayer.inventory.some(item => item.id === 's1') && (
-                  <button onClick={handleGetInspiration} disabled={!isMyTurn} className="bg-yellow-600 text-white font-bold text-sm py-2 px-3 rounded-lg hover:bg-yellow-700 transition-colors flex items-center gap-2 disabled:bg-gray-500"><LightbulbIcon className="w-4 h-4" /> Inspire</button>
+                  <button onClick={handleGetInspiration} disabled={!isMyTurn} className="btn" style={{backgroundColor: '#D97706', color: 'white', padding: '0.5rem 0.75rem', fontSize: '0.875rem'}}><LightbulbIcon className="w-4 h-4" /> Inspire</button>
                )}
                {currentPlayer.inventory.some(item => item.id === 's2') && (
-                  <button onClick={handleHighlightSentences} disabled={!isMyTurn} className="bg-cyan-600 text-white font-bold text-sm py-2 px-3 rounded-lg hover:bg-cyan-700 transition-colors flex items-center gap-2 disabled:bg-gray-500"><SparklesIcon className="w-4 h-4" /> Analyze</button>
+                  <button onClick={handleHighlightSentences} disabled={!isMyTurn} className="btn" style={{backgroundColor: '#0891B2', color: 'white', padding: '0.5rem 0.75rem', fontSize: '0.875rem'}}><SparklesIcon className="w-4 h-4" /> Analyze</button>
                )}
               {currentPlayer.inventory.some(item => item.id === 's3') && (
                   <button
                       onClick={handleGetCritique}
                       disabled={!isMyTurn || aiCritique.isLoading}
-                      className="bg-blue-600 text-white font-bold text-sm py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:bg-gray-500"
+                      className="btn" style={{backgroundColor: '#2563EB', color: 'white', padding: '0.5rem 0.75rem', fontSize: '0.875rem'}}
                   >
                     <ShieldIcon className="w-4 h-4" />
                     {aiCritique.isLoading ? "Thinking..." : "Critique"}
                   </button>
               )}
             </div>
-            <div className='flex items-center gap-4'>
+            <div className='turn-stats'>
               <span>Word Count: {wordCount}</span>
               <button
                   onClick={() => advanceTurn(false)}
                   disabled={!isMyTurn}
-                  className="bg-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:bg-gray-500 disabled:cursor-not-allowed"
+                  className="btn btn-primary"
+                  style={{width: 'auto'}}
               >
                   <PenIcon className="w-5 h-5"/>
                   Submit
@@ -523,22 +522,23 @@ const GameView: React.FC<GameViewProps> = ({
             </div>
           </div>
           {aiCritique.text && (
-            <div className="mt-2 p-3 bg-background rounded-lg border border-blue-500 animate-fade-in">
-                <h4 className="font-semibold text-blue-400">Editor's Eye Feedback:</h4>
-                <p className="text-sm italic mt-1 whitespace-pre-wrap">{aiCritique.text}</p>
+            <div className="ai-critique-box animate-fade-in">
+                <h4 style={{fontWeight: 600, color: '#60A5FA'}}>Editor's Eye Feedback:</h4>
+                <p style={{fontSize: '0.875rem', fontStyle: 'italic', marginTop: '0.25rem', whiteSpace: 'pre-wrap'}}>{aiCritique.text}</p>
             </div>
           )}
         </div>
-        <div className="bg-surface p-4 rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold mb-2 text-secondary">Brainstorming Pad</h3>
+        <div className="card">
+            <h3 className="sidebar-section-header">Brainstorming Pad</h3>
             <textarea
-                className="w-full h-24 p-2 bg-background border border-gray-600 rounded-lg text-sm font-serif focus:ring-2 focus:ring-blue-500"
+                className="form-textarea"
+                style={{height: '6rem', fontSize: '0.875rem'}}
                 placeholder="Jot down ideas here... (1 coin per 10 words)"
                 value={brainstormText}
                 onChange={(e) => setBrainstormText(e.target.value)}
             />
-            <div className="text-right mt-2">
-                <button onClick={handleBrainstorm} className="bg-blue-600 text-white text-sm font-bold py-1 px-3 rounded-lg hover:bg-blue-700 transition-colors">
+            <div style={{textAlign: 'right', marginTop: '0.5rem'}}>
+                <button onClick={handleBrainstorm} className="btn" style={{backgroundColor: '#2563EB', color: 'white', fontSize: '0.875rem', padding: '0.25rem 0.75rem', width: 'auto'}}>
                     Submit to Journal
                 </button>
             </div>
@@ -546,18 +546,18 @@ const GameView: React.FC<GameViewProps> = ({
       </div>
 
       {/* Right Column: Game Info */}
-      <div className="lg:col-span-4 space-y-4">
-        <div className="bg-surface p-4 rounded-lg shadow-lg text-center">
-            <p className="text-lg font-semibold">Turn {gameState.turn}</p>
+      <div className="game-view-sidebar">
+        <div className="card" style={{textAlign: 'center'}}>
+            <p style={{fontSize: '1.125rem', fontWeight: 600}}>Turn {gameState.turn}</p>
             {isPlayerAtMonsterLocation ? (
                 <>
-                    <p className="text-4xl font-bold text-primary animate-pulse-fast">{timer}</p>
-                    <p className="text-text-secondary">seconds remaining</p>
+                    <p className="animate-pulse-fast" style={{fontSize: '2.25rem', fontWeight: 'bold', color: 'var(--color-primary)'}}>{timer}</p>
+                    <p style={{color: 'var(--color-text-secondary)'}}>seconds remaining</p>
                 </>
             ) : (
                 <>
-                    <p className="text-4xl font-bold text-primary">-:--</p>
-                    <p className="text-text-secondary">{isAnyPlayerAtMonsterLocation ? "A battle rages elsewhere!" : "No threats detected"}</p>
+                    <p style={{fontSize: '2.25rem', fontWeight: 'bold', color: 'var(--color-primary)'}}>-:--</p>
+                    <p style={{color: 'var(--color-text-secondary)'}}>{isAnyPlayerAtMonsterLocation ? "A battle rages elsewhere!" : "No threats detected"}</p>
                 </>
             )}
         </div>
@@ -573,44 +573,44 @@ const GameView: React.FC<GameViewProps> = ({
             isMyTurn={isMyTurn}
         />
         
-        {isPlayerAtMonsterLocation ? (
-          <MonsterDisplay monster={gameState.monster!} />
+        {isPlayerAtMonsterLocation && gameState.monster ? (
+          <MonsterDisplay monster={gameState.monster} />
         ) : (
-          <div className="bg-surface p-4 rounded-lg shadow-lg text-center">
-            <p className="text-text-secondary">The air is calm... for now.</p>
-            {gameState.monster && <p className="text-xs italic text-red-400">A monster lurks at {gameState.settings.locations.find(l => l.id === gameState.monster?.locationId)?.name}!</p>}
+          <div className="card" style={{textAlign: 'center'}}>
+            <p style={{color: 'var(--color-text-secondary)'}}>The air is calm... for now.</p>
+            {gameState.monster && <p style={{fontSize: '0.75rem', fontStyle: 'italic', color: '#F87171'}}>A monster lurks at {gameState.settings.locations.find(l => l.id === gameState.monster?.locationId)?.name}!</p>}
           </div>
         )}
 
-        <div className="bg-surface p-4 rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold mb-2 text-secondary">Battle Log</h3>
-            <ul className="text-sm text-text-secondary space-y-1">
-                {battleLog.map((log, i) => <li key={i} className="opacity-75">{log}</li>)}
+        <div className="card">
+            <h3 className="sidebar-section-header">Battle Log</h3>
+            <ul style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.25rem'}}>
+                {battleLog.map((log, i) => <li key={i} style={{opacity: 0.75}}>{log}</li>)}
             </ul>
         </div>
         
-        <div className="bg-surface p-4 rounded-lg shadow-lg">
-            <h3 className="text-lg font-semibold mb-3 text-secondary">Player Actions</h3>
-            <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                    <button onClick={() => openModal('questLog')} className="w-full flex items-center justify-center gap-2 bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-yellow-700 transition-colors">
+        <div className="card">
+            <h3 className="sidebar-section-header">Player Actions</h3>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem'}}>
+                    <button onClick={() => openModal('questLog')} className="btn" style={{backgroundColor: '#D97706', color: 'white'}}>
                         <QuestIcon className="w-6 h-6" />
                         Quests
                     </button>
-                    <button onClick={onOpenJournal} className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                    <button onClick={onOpenJournal} className="btn" style={{backgroundColor: '#2563EB', color: 'white'}}>
                         <JournalIcon className="w-6 h-6" />
                         Journal
                     </button>
-                    <button onClick={onExportBible} className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <button onClick={onExportBible} className="btn" style={{backgroundColor: '#4F46E5', color: 'white'}}>
                         <DocumentDownloadIcon className="w-6 h-6" />
                         Export Bible
                     </button>
-                    <button onClick={onExportJournal} className="w-full flex items-center justify-center gap-2 bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 transition-colors">
+                    <button onClick={onExportJournal} className="btn" style={{backgroundColor: '#0D9488', color: 'white'}}>
                         <DocumentDownloadIcon className="w-6 h-6" />
                         Export Journal
                     </button>
                 </div>
-                <button onClick={onOpenShop} className="w-full flex items-center justify-center gap-2 bg-secondary text-white font-bold py-3 px-4 rounded-lg hover:bg-pink-700 transition-colors">
+                <button onClick={onOpenShop} className="btn btn-secondary">
                     <ShopIcon className="w-6 h-6" />
                     Shop
                 </button>
@@ -618,14 +618,14 @@ const GameView: React.FC<GameViewProps> = ({
         </div>
 
         {isHost && (
-             <div className="bg-surface p-4 rounded-lg shadow-lg">
-                <h3 className="text-lg font-semibold mb-3 text-primary">Host Actions</h3>
-                <div className="space-y-2">
-                    <button onClick={() => openModal('createQuest')} className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
+             <div className="card">
+                <h3 className="sidebar-section-header" style={{color: 'var(--color-primary)'}}>Host Actions</h3>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                    <button onClick={() => openModal('createQuest')} className="btn" style={{backgroundColor: '#16A34A', color: 'white'}}>
                         Create Quest
                     </button>
                     {!gameState.monster && (
-                        <button onClick={handleSpawnMonster} disabled={isMonsterSpawning} className="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700 disabled:bg-gray-500 transition-colors">
+                        <button onClick={handleSpawnMonster} disabled={isMonsterSpawning} className="btn" style={{backgroundColor: '#DC2626', color: 'white'}}>
                             {isMonsterSpawning ? 'Summoning...' : 'Summon Monster'}
                         </button>
                     )}

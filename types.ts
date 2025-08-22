@@ -19,7 +19,6 @@ export enum Difficulty {
 
 export enum GameMode {
     OFFLINE = 'Offline',
-    ONLINE = 'Online (Discord Activity)',
 }
 
 export interface Theme {
@@ -53,7 +52,7 @@ export interface Character {
 }
 
 export interface Player {
-  id: string; // Can be a generic ID in offline mode, or Discord User ID in online mode
+  id: string; 
   name: string;
   hearts: number;
   maxHearts: number;
@@ -113,10 +112,8 @@ export interface GameSettings {
   difficulty: Difficulty;
   storyLengthWords: number | null; // null for unlimited
   locations: Location[];
-  gameMode: GameMode;
   hostRules: string;
   initialCharacters: Record<string, Character[]>; // Player name to character array
-  hostId: string | null;
 }
 
 export interface Comment {
@@ -127,7 +124,6 @@ export interface Comment {
 }
 
 export interface GameState {
-  gameId: string; // Unique ID for the game session, derived from hostId in online mode
   status: GameStatus;
   settings: GameSettings;
   story: string;

@@ -1,11 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { setup } from 'twind';
-import { twindConfig } from './twind.config';
-
-// Initialize Twind before rendering the app
-setup(twindConfig);
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

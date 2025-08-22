@@ -3,16 +3,12 @@ import React, { useState } from 'react';
 import type { GameSettings, Location, Character } from '../types';
 import { Difficulty, GameMode } from '../types';
 import { PenIcon, BookOpenIcon, SparklesIcon, LevelUpIcon } from './icons';
-import type { Participant } from '../types/discord';
 
 interface GameSetupProps {
   onGameStart: (settings: GameSettings) => void;
-  gameMode: GameMode;
-  participants: Participant[];
-  isHost: boolean;
 }
 
-const GameSetup: React.FC<GameSetupProps> = ({ onGameStart, gameMode, participants, isHost }) => {
+const GameSetup: React.FC<GameSetupProps> = ({ onGameStart }) => {
   const [playerNames, setPlayerNames] = useState<string[]>(['Player 1']);
   const [characters, setCharacters] = useState<Record<string, Character[]>>({
     'Player 1': [{ name: 'Character Name', bio: 'A brave adventurer.' }]
@@ -105,7 +101,7 @@ Whispering Caves > Haunted Forest`
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const locations = parseLocations(locationsInput);
-    const finalPlayerNames = gameMode === GameMode.ONLINE ? participants.map(p => p.global_name || p.username) : playerNames.filter(name => name.trim() !== '');
+    const finalPlayerNames = playerNames.filter(name => name.trim() !== '');
     const finalCharacters = Object.fromEntries(
         Object.entries(characters).filter(([name]) => finalPlayerNames.includes(name))
     );
@@ -119,145 +115,126 @@ Whispering Caves > Haunted Forest`
       storyLengthWords: null,
       players: [],
       locations,
-      gameMode,
       hostRules,
       initialCharacters: finalCharacters,
-      hostId: gameMode === GameMode.ONLINE ? participants.sort((a,b) => a.id.localeCompare(b.id))[0].id : null,
     });
   };
 
-  const canSubmit = gameMode === GameMode.OFFLINE || isHost;
-
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 animate-fade-in">
-      <div className="text-center mb-10">
-        <h1 className="text-5xl sm:text-6xl font-bold text-primary font-serif tracking-wider">Chronicle Siege</h1>
-        <p className="text-text-secondary mt-3 text-lg">Forge your epic tale, together.</p>
-        {gameMode === GameMode.ONLINE && (
-          <p className="text-green-400 font-semibold mt-2 px-4 py-1 bg-green-900/50 rounded-full inline-block">
-            Discord Activity Mode
-          </p>
-        )}
+    <div className="game-setup-wrapper animate-fade-in">
+      <div className="game-setup-header">
+        <h1>Chronicle Siege</h1>
+        <p>Forge your epic tale, together.</p>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <form onSubmit={handleSubmit} className="game-setup-form">
+        <div className="game-setup-grid">
           
           {/* Left/Main Column: Story Details */}
-          <div className="lg:col-span-2 bg-surface p-6 rounded-2xl shadow-lg border border-gray-700/50 space-y-6">
-            <h2 className="text-2xl font-semibold text-secondary font-serif flex items-center gap-3">
+          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h2 className="game-setup-section-header">
               <BookOpenIcon className="w-6 h-6" />
               <span>World Setup</span>
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="game-setup-grid-2col">
               <div>
-                <label htmlFor="storyPrompt" className="block text-lg font-semibold mb-2 text-text-main">Story Prompt</label>
+                <label htmlFor="storyPrompt" className="form-label">Story Prompt</label>
                 <textarea
                   id="storyPrompt" value={storyPrompt} onChange={(e) => setStoryPrompt(e.target.value)}
-                  className="w-full p-3 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary font-serif text-text-secondary disabled:opacity-70"
-                  rows={6} disabled={!canSubmit}/>
+                  className="form-textarea font-serif"
+                  rows={6} />
               </div>
               <div>
-                <label htmlFor="hostRules" className="block text-lg font-semibold mb-2 text-text-main">Host Rules</label>
+                <label htmlFor="hostRules" className="form-label">Host Rules</label>
                 <textarea
                   id="hostRules" value={hostRules} onChange={(e) => setHostRules(e.target.value)}
-                  className="w-full p-3 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary font-serif text-text-secondary disabled:opacity-70"
-                  rows={6} disabled={!canSubmit}/>
+                  className="form-textarea font-serif"
+                  rows={6} />
               </div>
             </div>
 
             <div>
-              <label htmlFor="locations" className="block text-lg font-semibold mb-2 text-text-main">Story Locations & Connections</label>
+              <label htmlFor="locations" className="form-label">Story Locations & Connections</label>
               <textarea
                   id="locations" value={locationsInput} onChange={(e) => setLocationsInput(e.target.value)}
-                  className="w-full p-3 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary font-mono text-sm text-text-secondary disabled:opacity-70"
-                  rows={5} placeholder={'e.g. Town > Forest, Castle'} disabled={!canSubmit}/>
-              <p className="text-xs text-text-secondary mt-1">{'Format: `Location > Connection1, Connection2`.'}</p>
+                  className="form-textarea font-mono"
+                  style={{fontSize: '0.875rem'}}
+                  rows={5} placeholder={'e.g. Town > Forest, Castle'} />
+              <p style={{fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem'}}>{'Format: `Location > Connection1, Connection2`.'}</p>
             </div>
           </div>
 
           {/* Right Column: Players & Settings */}
-          <div className="space-y-8">
-            <div className="bg-surface p-6 rounded-2xl shadow-lg border border-gray-700/50">
-              <h2 className="text-2xl font-semibold text-secondary font-serif flex items-center gap-3 mb-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="card">
+              <h2 className="game-setup-section-header">
                 <SparklesIcon className="w-6 h-6" />
                 <span>Game Settings</span>
               </h2>
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  <label htmlFor="goals" className="block text-lg font-semibold mb-2 text-text-main">Main Goal / Task</label>
+                  <label htmlFor="goals" className="form-label">Main Goal / Task</label>
                   <input
                       type="text" id="goals" value={goals} onChange={(e) => setGoals(e.target.value)}
-                      className="w-full p-3 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary disabled:opacity-70" disabled={!canSubmit}/>
+                      className="form-input" />
                 </div>
                 <div>
-                  <label htmlFor="difficulty" className="block text-lg font-semibold mb-2 text-text-main">Difficulty</label>
+                  <label htmlFor="difficulty" className="form-label">Difficulty</label>
                   <select
                       id="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                      className="w-full p-3 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary disabled:opacity-70"
-                      disabled={!canSubmit}
+                      className="form-select"
                   >
                       {Object.values(Difficulty).map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="gameModeDisplay" className="block text-lg font-semibold mb-2 text-text-main">Game Mode</label>
+                  <label htmlFor="gameModeDisplay" className="form-label">Game Mode</label>
                   <input
-                      type="text" id="gameModeDisplay" value={gameMode}
-                      className="w-full p-3 bg-background border border-gray-600 rounded-lg disabled:opacity-70" disabled />
+                      type="text" id="gameModeDisplay" value={GameMode.OFFLINE}
+                      className="form-input" disabled style={{opacity: 0.7}}/>
                 </div>
               </div>
             </div>
             
-            <div className="bg-surface p-6 rounded-2xl shadow-lg border border-gray-700/50">
-              <h2 className="text-2xl font-semibold text-secondary font-serif flex items-center gap-3 mb-4">
+            <div className="card">
+              <h2 className="game-setup-section-header">
                 <LevelUpIcon className="w-6 h-6" />
                 <span>Players & Characters</span>
               </h2>
-              {gameMode === GameMode.ONLINE ? (
-                 <div className="space-y-2">
-                    {participants.map((p, i) => (
-                        <div key={p.id} className="p-3 bg-background rounded-lg border border-gray-700 font-semibold text-text-main">
-                            {p.global_name || p.username} {i === 0 && <span className="text-xs text-primary font-bold"> (Host)</span>}
-                        </div>
-                    ))}
-                </div>
-              ) : (
-                 <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
+                 <div className="game-setup-player-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {playerNames.map((pName, pIndex) => (
-                      <div key={pIndex} className="p-4 bg-background/50 rounded-lg">
+                      <div key={pIndex} className="game-setup-player-card">
                           <input
                               type="text" value={pName} onChange={(e) => handlePlayerNameChange(pIndex, e.target.value)}
-                              className="w-full p-2 mb-3 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary font-bold text-lg"
+                              className="form-input"
                               placeholder={`Player ${pIndex + 1} Name`}
                           />
-                          <div className="space-y-2">
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                               {(characters[pName] || []).map((char, cIndex) => (
-                                   <div key={cIndex} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                      <input type="text" value={char.name} onChange={e => handleCharacterChange(pName, cIndex, 'name', e.target.value)} placeholder="Character Name" className="w-full p-2 bg-surface border border-gray-600 rounded-md text-sm" />
-                                      <input type="text" value={char.bio} onChange={e => handleCharacterChange(pName, cIndex, 'bio', e.target.value)} placeholder="Bio / Description" className="w-full p-2 bg-surface border border-gray-600 rounded-md text-sm" />
+                                   <div key={cIndex} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                      <input type="text" value={char.name} onChange={e => handleCharacterChange(pName, cIndex, 'name', e.target.value)} placeholder="Character Name" className="form-input" style={{fontSize: '0.875rem'}} />
+                                      <input type="text" value={char.bio} onChange={e => handleCharacterChange(pName, cIndex, 'bio', e.target.value)} placeholder="Bio / Description" className="form-input" style={{fontSize: '0.875rem'}} />
                                   </div>
                               ))}
                           </div>
-                          <button type="button" onClick={() => handleAddCharacter(pName)} className="mt-2 text-xs text-primary hover:text-purple-400 transition">+ Add Character</button>
+                          <button type="button" onClick={() => handleAddCharacter(pName)} style={{marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left'}}>+ Add Character</button>
                       </div>
                   ))}
-                   <button type="button" onClick={handleAddPlayer} className="mt-2 w-full text-center text-sm py-2 border-2 border-dashed border-gray-600 text-text-secondary hover:bg-primary/10 hover:border-primary transition rounded-lg">+ Add Player</button>
+                   <button type="button" onClick={handleAddPlayer} style={{width: '100%', textAlign: 'center', padding: '0.5rem', border: '2px dashed var(--color-border)', color: 'var(--color-text-secondary)', borderRadius: '0.5rem'}}>+ Add Player</button>
                 </div>
-              )}
             </div>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-gray-700/50">
+        <div style={{ paddingTop: '1.5rem', marginTop: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
           <button 
             type="submit"
-            disabled={!canSubmit}
-            className="w-full flex items-center justify-center gap-3 bg-primary text-white font-bold py-4 px-6 rounded-lg text-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-primary transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:transform-none"
+            className="btn btn-primary"
+            style={{fontSize: '1.25rem'}}
           >
             <PenIcon className="w-6 h-6"/>
-            <span>{canSubmit ? 'Begin the Chronicle' : 'Waiting for Host to Start...'}</span>
+            <span>Begin the Chronicle</span>
           </button>
         </div>
       </form>

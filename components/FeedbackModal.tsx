@@ -13,13 +13,14 @@ interface FeedbackModalProps {
 
 const StarRatingInput: React.FC<{ rating: number, setRating: (r: number) => void }> = ({ rating, setRating }) => {
     return (
-        <div className="flex justify-center gap-2">
+        <div style={{display: 'flex', justifyContent: 'center', gap: '0.5rem'}}>
             {[...Array(5)].map((_, i) => {
                 const ratingValue = i + 1;
                 return (
-                    <button key={i} onClick={() => setRating(ratingValue)} className="focus:outline-none">
+                    <button key={i} onClick={() => setRating(ratingValue)} style={{background: 'none', border: 'none', cursor: 'pointer', padding: 0}}>
                         <StarIcon 
-                            className={`w-8 h-8 cursor-pointer transition-colors ${ratingValue <= rating ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-500'}`} 
+                            className="w-8 h-8"
+                            style={{color: ratingValue <= rating ? '#FBBF24' : '#4B5563', transition: 'color 0.2s'}}
                             filled={ratingValue <= rating}
                         />
                     </button>
@@ -52,35 +53,37 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ fromPlayer, toPlayer, onC
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-surface rounded-lg shadow-xl p-6 max-w-lg w-full mx-4 animate-slide-in border-2 border-secondary">
-                <h2 className="text-2xl font-bold text-center mb-2 text-secondary font-serif">Give Feedback</h2>
-                <p className="text-center text-text-secondary mb-4">Your feedback for <span className="font-semibold text-primary">{toPlayer.name}'s</span> last turn:</p>
+        <div className="modal-overlay">
+            <div className="modal-content size-md" style={{borderColor: 'var(--color-secondary)'}}>
+                <h2 className="font-serif" style={{fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '0.5rem', color: 'var(--color-secondary)'}}>Give Feedback</h2>
+                <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', marginBottom: '1rem'}}>Your feedback for <span style={{fontWeight: 600, color: 'var(--color-primary)'}}>{toPlayer.name}'s</span> last turn:</p>
                 
-                <div className="space-y-4">
+                <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
                     <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-1">Rating</label>
+                        <label className="form-label" style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}>Rating</label>
                         <StarRatingInput rating={rating} setRating={setRating} />
                     </div>
                     <div>
-                        <label htmlFor="feedback-text" className="block text-sm font-medium text-text-secondary mb-1">Feedback</label>
+                        <label htmlFor="feedback-text" className="form-label" style={{fontSize: '0.875rem', marginBottom: '0.25rem'}}>Feedback</label>
                         <textarea
                             id="feedback-text"
                             value={feedback}
                             onChange={e => setFeedback(e.target.value)}
-                            className="w-full h-24 p-2 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-secondary"
+                            className="form-textarea"
+                            style={{height: '6rem'}}
                             placeholder="Be specific and helpful..."
                         />
                     </div>
-                    {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+                    {error && <p style={{color: '#F87171', fontSize: '0.875rem', textAlign: 'center'}}>{error}</p>}
                 </div>
                 
-                <div className="flex items-center justify-between mt-6">
-                    <button onClick={onClose} className="text-sm text-text-secondary hover:text-white transition">Skip</button>
+                <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.5rem'}}>
+                    <button onClick={onClose} style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer'}}>Skip</button>
                     <button
                         onClick={handleSubmit}
                         disabled={isLoading}
-                        className="bg-secondary text-white font-bold py-2 px-6 rounded-lg hover:bg-pink-700 disabled:bg-gray-500 transition-colors"
+                        className="btn btn-secondary"
+                        style={{width: 'auto'}}
                     >
                         {isLoading ? 'Checking...' : 'Submit'}
                     </button>

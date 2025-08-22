@@ -9,15 +9,15 @@ interface IntermissionViewProps {
 }
 
 const QuestListItem: React.FC<{quest: Quest}> = ({ quest }) => (
-    <div className="bg-background/50 p-3 rounded-md text-left">
-        <h4 className="font-semibold text-secondary">{quest.title}</h4>
-        <p className="text-xs text-text-secondary italic mt-1">{quest.description}</p>
-        <div className="flex items-center gap-3 text-xs mt-2">
-            <div className="flex items-center gap-1 text-yellow-400">
+    <div style={{backgroundColor: 'var(--color-background-light)', padding: '0.75rem', borderRadius: '0.375rem', textAlign: 'left'}}>
+        <h4 style={{fontWeight: 600, color: 'var(--color-secondary)'}}>{quest.title}</h4>
+        <p style={{fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontStyle: 'italic', marginTop: '0.25rem'}}>{quest.description}</p>
+        <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', marginTop: '0.5rem'}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#FBBF24'}}>
                 <CoinIcon className="w-3 h-3" />
                 <span>{quest.rewardCoins}</span>
             </div>
-            <div className="flex items-center gap-1 text-green-400">
+            <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#34D399'}}>
                 <LevelUpIcon className="w-3 h-3" />
                 <span>{quest.rewardXp} XP</span>
             </div>
@@ -47,49 +47,49 @@ const IntermissionView: React.FC<IntermissionViewProps> = ({ gameState, onStartT
   }, [countdown, onStartTurn, isPaused]);
 
   return (
-    <div className="fixed inset-0 bg-background bg-opacity-95 flex flex-col items-center justify-center z-50 animate-fade-in p-4 overflow-y-auto">
-      <div className="text-center w-full max-w-4xl">
-        <h1 className="text-4xl sm:text-6xl font-bold text-primary font-serif animate-slide-in">
+    <div className="intermission-overlay animate-fade-in">
+      <div className="intermission-header">
+        <h1 className="font-serif animate-slide-in">
           {isPaused ? 'Game Paused' : `${currentPlayer.name}'s Turn`}
         </h1>
-        <p className="text-text-secondary mt-2 text-lg">{isPaused ? 'Take a moment to collect your thoughts.' : 'Get ready to write!'}</p>
+        <p>{isPaused ? 'Take a moment to collect your thoughts.' : 'Get ready to write!'}</p>
       </div>
       
-      <div className="w-full max-w-5xl bg-surface rounded-lg shadow-2xl p-6 my-8 border border-gray-700 flex-grow overflow-hidden flex flex-col">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+      <div className="intermission-content">
+        <div className="intermission-grid">
             {/* Left Column: Story */}
-            <div className="md:col-span-2 flex flex-col h-full">
-                <div className="mb-4 border-b border-secondary pb-3">
-                    <h2 className="text-lg font-semibold text-secondary">Current Goal</h2>
-                    <p className="text-text-secondary italic">{gameState.settings.goals}</p>
+            <div className="intermission-col">
+                <div style={{marginBottom: '1rem', borderBottom: '1px solid var(--color-secondary)', paddingBottom: '0.75rem'}}>
+                    <h2 style={{fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-secondary)'}}>Current Goal</h2>
+                    <p style={{color: 'var(--color-text-secondary)', fontStyle: 'italic'}}>{gameState.settings.goals}</p>
                 </div>
-                <div className="flex-grow overflow-y-auto pr-2">
-                    <h3 className="text-lg font-semibold text-primary mb-2">The Story So Far...</h3>
-                    <div className="prose prose-invert max-w-none text-text-secondary font-serif leading-relaxed whitespace-pre-wrap">
+                <div className="intermission-scrollable">
+                    <h3 style={{fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-primary)', marginBottom: '0.5rem'}}>The Story So Far...</h3>
+                    <div className="prose prose-invert font-serif">
                         {gameState.story}
                     </div>
                 </div>
             </div>
             {/* Right Column: Rules & Quests */}
-            <div className="flex flex-col h-full overflow-hidden">
-                <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-secondary">Host Rules</h3>
-                    <div className="text-sm text-text-secondary whitespace-pre-wrap bg-background/50 p-3 rounded-md mt-1">{gameState.settings.hostRules}</div>
+            <div className="intermission-col">
+                <div style={{marginBottom: '1rem'}}>
+                    <h3 style={{fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-secondary)'}}>Host Rules</h3>
+                    <div style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', whiteSpace: 'pre-wrap', backgroundColor: 'var(--color-background-light)', padding: '0.75rem', borderRadius: '0.375rem', marginTop: '0.25rem'}}>{gameState.settings.hostRules}</div>
                 </div>
-                 <div className="flex-grow flex flex-col overflow-hidden">
-                    <h3 className="text-lg font-semibold text-secondary flex items-center gap-2 mb-1"><QuestIcon className="w-5 h-5" /> Active Quests</h3>
-                    <div className="overflow-y-auto space-y-2 pr-2">
-                       {myQuests.length > 0 ? myQuests.map(q => <QuestListItem key={q.id} quest={q}/>) : <p className="text-sm text-text-secondary italic">No active quests.</p>}
+                 <div style={{flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
+                    <h3 style={{fontSize: '1.125rem', fontWeight: 600, color: 'var(--color-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem'}}><QuestIcon className="w-5 h-5" /> Active Quests</h3>
+                    <div className="intermission-scrollable" style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+                       {myQuests.length > 0 ? myQuests.map(q => <QuestListItem key={q.id} quest={q}/>) : <p style={{fontSize: '0.875rem', color: 'var(--color-text-secondary)', fontStyle: 'italic'}}>No active quests.</p>}
                     </div>
                 </div>
             </div>
         </div>
       </div>
 
-      <div className="text-center w-full max-w-4xl">
+      <div className="intermission-footer">
         <button
           onClick={onStartTurn}
-          className="w-full max-w-xs mx-auto flex items-center justify-center gap-3 bg-primary text-white font-bold py-4 px-6 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-primary transition-transform transform hover:scale-105"
+          className="btn btn-primary"
         >
           {isPaused ? <PlayIcon className="w-6 h-6"/> : <PenIcon className="w-6 h-6" />}
           <span>{isPaused ? 'Resume Game' : `Start Writing (${countdown})`}</span>

@@ -17,35 +17,36 @@ const StoryBibleModal: React.FC<StoryBibleModalProps> = ({ storyBible, isHost, o
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-surface rounded-lg shadow-xl p-6 max-w-3xl w-full mx-4 animate-slide-in border-2 border-blue-500 h-[80vh] flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-blue-400 font-serif flex items-center gap-2">
+        <div className="modal-overlay">
+            <div className="modal-content size-lg tall" style={{borderColor: '#60A5FA'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+                    <h2 className="font-serif" style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#60A5FA', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
                         <BookOpenIcon className="w-7 h-7" />
                         Story Bible
                     </h2>
-                    <button onClick={onClose} className="text-2xl text-text-secondary hover:text-white">&times;</button>
+                    <button onClick={onClose} style={{fontSize: '1.5rem', color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer'}}>&times;</button>
                 </div>
 
-                <div className="flex-grow overflow-y-auto pr-2">
+                <div style={{flexGrow: 1, overflowY: 'auto', paddingRight: '0.5rem'}}>
                     {isHost ? (
                         <textarea
                             value={editText}
                             onChange={(e) => setEditText(e.target.value)}
-                            className="w-full h-full p-3 bg-background border border-gray-600 rounded-lg text-base font-serif focus:ring-2 focus:ring-blue-500"
+                            className="form-textarea font-serif"
+                            style={{width: '100%', height: '100%'}}
                             placeholder="Add lore, character details, world rules..."
                         />
                     ) : (
-                        <div className="prose prose-invert max-w-none text-text-secondary font-serif leading-relaxed whitespace-pre-wrap">
+                        <div className="prose prose-invert font-serif">
                             {storyBible}
                         </div>
                     )}
                 </div>
 
-                <div className="flex justify-end gap-3 mt-4">
-                    <button type="button" onClick={onClose} className="text-sm text-text-secondary hover:text-white transition py-2 px-4">Close</button>
+                <div style={{display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem'}}>
+                    <button type="button" onClick={onClose} style={{background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-text-secondary)', padding: '0.5rem 1rem'}}>Close</button>
                     {isHost && (
-                        <button onClick={handleSave} className="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors">
+                        <button onClick={handleSave} className="btn" style={{backgroundColor: '#2563EB', color: 'white', width: 'auto'}}>
                             Save & Close
                         </button>
                     )}

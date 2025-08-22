@@ -62,13 +62,13 @@ const LimboView: React.FC<LimboViewProps> = ({ gameState, setGameState, onAllPla
     }, [limboState.completedPlayers, gameState.settings.players.length, onAllPlayersLeft]);
 
     return (
-        <div className="max-w-7xl mx-auto p-4 animate-fade-in">
-            <div className="text-center mb-8">
-                <h1 className="text-5xl font-bold text-purple-400 font-serif">Brainstorm Limbo</h1>
-                <p className="text-text-secondary mt-2">There is no time here. Defeat your inner demons by writing. Your words have power.</p>
+        <div className="animate-fade-in" style={{maxWidth: '80rem', margin: 'auto'}}>
+            <div style={{textAlign: 'center', marginBottom: '2rem'}}>
+                <h1 className="font-serif" style={{fontSize: '3rem', fontWeight: 'bold', color: '#A78BFA'}}>Brainstorm Limbo</h1>
+                <p style={{color: 'var(--color-text-secondary)', marginTop: '0.5rem'}}>There is no time here. Defeat your inner demons by writing. Your words have power.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem'}}>
                 {gameState.settings.players.map(player => {
                     const goal = limboState.wordGoals[player.id];
                     const demon = limboState.demons[player.id];
@@ -80,37 +80,38 @@ const LimboView: React.FC<LimboViewProps> = ({ gameState, setGameState, onAllPla
 
                     if (hasLeft) {
                        return (
-                            <div key={player.id} className="bg-surface p-4 rounded-lg shadow-lg border-2 border-green-500 opacity-60">
-                                <h2 className="text-xl font-bold text-center text-green-400">{player.name}</h2>
-                                <p className="text-center text-text-secondary mt-4">Has found their way back.</p>
+                            <div key={player.id} className="card" style={{border: '2px solid #22C55E', opacity: 0.6}}>
+                                <h2 style={{fontSize: '1.25rem', fontWeight: 'bold', textAlign: 'center', color: '#4ADE80'}}>{player.name}</h2>
+                                <p style={{textAlign: 'center', color: 'var(--color-text-secondary)', marginTop: '1rem'}}>Has found their way back.</p>
                             </div>
                         );
                     }
 
                     return (
-                        <div key={player.id} className="bg-surface p-4 rounded-lg shadow-lg flex flex-col gap-4">
+                        <div key={player.id} className="card" style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
                             <MonsterDisplay monster={{...demon, currentHp: Math.max(0, goal - wordCount)}} />
                             
-                            <div className="flex-grow flex flex-col">
+                            <div style={{flexGrow: 1, display: 'flex', flexDirection: 'column'}}>
                                 <textarea
-                                    className="w-full flex-grow p-3 bg-background border border-gray-600 rounded-lg text-base font-serif focus:ring-2 focus:ring-purple-500"
+                                    className="form-textarea font-serif"
+                                    style={{flexGrow: 1, minHeight: '10rem'}}
                                     placeholder="Write to fight the demon..."
                                     value={currentWriting}
                                     onChange={e => handleWritingChange(player.id, e.target.value)}
-                                    rows={8}
                                 />
-                                <div className="mt-2 text-sm text-text-secondary">
+                                <div style={{marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)'}}>
                                     Word Count: {wordCount} / {goal}
                                 </div>
-                                <div className="w-full bg-background rounded-full h-2.5 mt-1 border border-gray-600">
-                                    <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                                <div style={{width: '100%', backgroundColor: 'var(--color-background)', borderRadius: '9999px', height: '0.625rem', marginTop: '0.25rem', border: '1px solid var(--color-border)'}}>
+                                    <div style={{backgroundColor: '#A855F7', height: '100%', borderRadius: '9999px', width: `${progress}%` }}></div>
                                 </div>
                             </div>
 
                             <button
                                 disabled={!isGoalMet}
                                 onClick={() => handleLeaveLimbo(player.id)}
-                                className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
+                                className="btn"
+                                style={{backgroundColor: '#16A34A', color: 'white'}}
                             >
                                 {isGoalMet ? 'Leave Limbo (+1 Rebirth Pt)' : 'Keep Writing'}
                             </button>

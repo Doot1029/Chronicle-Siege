@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Monster } from '../types';
 
@@ -10,23 +9,22 @@ const MonsterDisplay: React.FC<MonsterDisplayProps> = ({ monster }) => {
   const healthPercentage = (monster.currentHp / monster.maxHp) * 100;
 
   return (
-    <div className="bg-surface p-4 rounded-lg shadow-lg animate-slide-in">
-      <h3 className="text-2xl font-bold text-center text-red-500 font-serif">{monster.name}</h3>
-      <p className="text-center text-sm text-text-secondary italic mb-3">"{monster.description}"</p>
+    <div className="card animate-slide-in">
+      <h3 className="font-serif" style={{fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', color: '#EF4444'}}>{monster.name}</h3>
+      <p style={{textAlign: 'center', fontSize: '0.875rem', color: 'var(--color-text-secondary)', fontStyle: 'italic', marginBottom: '0.75rem'}}>"{monster.description}"</p>
       
-      <div className="w-full h-64 bg-background rounded-lg overflow-hidden my-3 border-2 border-red-900/50">
-        <img src={monster.imageUrl} alt={monster.name} className="w-full h-full object-cover" />
+      <div style={{width: '100%', height: '16rem', backgroundColor: 'var(--color-background)', borderRadius: '0.5rem', overflow: 'hidden', margin: '0.75rem 0', border: '2px solid rgba(127, 29, 29, 0.5)'}}>
+        <img src={monster.imageUrl} alt={monster.name} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
       </div>
 
       <div>
-        <div className="flex justify-between items-center text-sm font-semibold mb-1">
-          <span className="text-red-400">HP</span>
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.25rem'}}>
+          <span style={{color: '#F87171'}}>HP</span>
           <span>{monster.currentHp} / {monster.maxHp}</span>
         </div>
-        <div className="w-full bg-background rounded-full h-4 border border-gray-600">
+        <div style={{width: '100%', backgroundColor: 'var(--color-background)', borderRadius: '9999px', height: '1rem', border: '1px solid var(--color-border)'}}>
           <div
-            className="bg-red-600 h-full rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${healthPercentage}%` }}
+            style={{backgroundColor: '#DC2626', height: '100%', borderRadius: '9999px', transition: 'width 0.5s ease-out', width: `${healthPercentage}%`}}
           ></div>
         </div>
       </div>

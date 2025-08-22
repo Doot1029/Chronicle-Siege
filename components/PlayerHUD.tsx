@@ -32,9 +32,9 @@ const PlayerHUD: React.FC<PlayerHUDProps> = ({ players, currentPlayerId, onDonat
   };
 
   return (
-    <div className="bg-surface p-4 rounded-lg shadow-lg">
-      <h3 className="text-lg font-semibold mb-3 text-secondary">Party Status</h3>
-      <div className="space-y-3">
+    <div className="card">
+      <h3 className="sidebar-section-header">Party Status</h3>
+      <div className="player-hud-list">
         {players.map((player) => {
           const activeCharacter = player.characters[player.activeCharacterIndex];
           const averageRating = useMemo(() => {
@@ -44,57 +44,54 @@ const PlayerHUD: React.FC<PlayerHUDProps> = ({ players, currentPlayerId, onDonat
           }, [player.feedback]);
 
           const isDonatingToThisPlayer = donation.toId === player.id;
+          const isCurrentPlayer = player.id === currentPlayerId;
 
           return (
             <div
               key={player.id}
-              className={`p-3 rounded-lg transition-all duration-300 ${
-                player.id === currentPlayerId ? 'bg-primary/20 border-l-4 border-primary' : 'bg-background/50'
-              }`}
+              className={`player-card ${isCurrentPlayer ? 'is-current' : ''}`}
             >
-              <div className="flex justify-between items-start">
+              <div className="player-card-header">
                 <div>
-                    <span className="font-bold text-text-main flex items-center gap-2">
-                        {player.id === currentPlayerId && <PenIcon className="w-4 h-4 text-primary animate-pulse"/>}
+                    <span className="player-card-name">
+                        {isCurrentPlayer && <PenIcon className="w-4 h-4" style={{color: 'var(--color-primary)', animation: 'pulse 1.5s infinite'}}/>}
                         {player.name}
                     </span>
-                    <span className="text-xs text-text-secondary ml-1">(as {activeCharacter.name})</span>
+                    <span style={{fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginLeft: '0.25rem'}}>(as {activeCharacter.name})</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center text-xs text-yellow-400">
+                <div className="player-card-stats" style={{fontSize: '0.75rem'}}>
+                    <div style={{display: 'flex', alignItems: 'center', color: '#FBBF24'}}>
                       {[...Array(5)].map((_, i) => <StarIcon key={i} className="w-4 h-4" filled={i < averageRating} />)}
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-text-secondary">
-                        <LevelUpIcon className="w-4 h-4 text-green-400" />
+                    <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--color-text-secondary)'}}>
+                        <LevelUpIcon className="w-4 h-4" style={{color: '#34D399'}} />
                         <span>Lvl {player.level}</span>
                     </div>
                 </div>
               </div>
-              <div className="flex justify-between items-center mt-2">
-                <div className="flex items-center gap-1">
+              <div className="player-card-footer" style={{marginTop: '0.5rem'}}>
+                <div className="player-card-hearts">
                   {[...Array(player.maxHearts)].map((_, i) => (
                     <HeartIcon
                       key={i}
-                      className={`w-5 h-5 transition-colors ${
-                        i < player.hearts ? 'text-red-500' : 'text-gray-600'
-                      }`}
+                      className={`heart-icon ${i < player.hearts ? 'filled' : 'empty'}`}
                     />
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 text-yellow-400">
+                <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#FBBF24'}}>
                         <CoinIcon className="w-5 h-5" />
-                        <span className="font-semibold">{player.coins}</span>
+                        <span style={{fontWeight: 600}}>{player.coins}</span>
                     </div>
                     {player.id !== currentPlayerId && (
-                        <button onClick={() => handleDonateClick(player.id)} title={`Donate to ${player.name}`} className="text-green-400 hover:text-green-300">
+                        <button onClick={() => handleDonateClick(player.id)} title={`Donate to ${player.name}`} className="btn-icon" style={{color: '#34D399'}}>
                             <DonateIcon className="w-5 h-5" />
                         </button>
                     )}
                 </div>
               </div>
               {isDonatingToThisPlayer && (
-                <div className="mt-2 flex gap-2 animate-fade-in">
+                <div className="animate-fade-in" style={{marginTop: '0.5rem', display: 'flex', gap: '0.5rem'}}>
                   <input
                     type="number"
                     value={donation.amount}
@@ -102,9 +99,10 @@ const PlayerHUD: React.FC<PlayerHUDProps> = ({ players, currentPlayerId, onDonat
                     placeholder="Amount"
                     min="1"
                     max={currentPlayer.coins}
-                    className="w-full p-1 text-sm bg-background border border-gray-600 rounded-md focus:ring-1 focus:ring-primary"
+                    className="form-input"
+                    style={{padding: '0.25rem', fontSize: '0.875rem'}}
                   />
-                  <button onClick={() => handleDonationSubmit(currentPlayerId, player.id)} className="px-3 py-1 text-sm bg-primary rounded-md hover:bg-purple-700">Send</button>
+                  <button onClick={() => handleDonationSubmit(currentPlayerId, player.id)} className="btn btn-primary" style={{padding: '0.25rem 0.75rem', fontSize: '0.875rem', width: 'auto'}}>Send</button>
                 </div>
               )}
             </div>

@@ -11,38 +11,43 @@ const BrainstormJournalModal: React.FC<BrainstormJournalModalProps> = ({ journal
     const [activeTab, setActiveTab] = useState<string>(players[0]?.id || '');
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-surface rounded-lg shadow-xl p-6 max-w-4xl w-full mx-4 animate-slide-in border-2 border-blue-500 h-[80vh] flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-blue-400 font-serif">Brainstorming Journal</h2>
-                    <button onClick={onClose} className="text-2xl text-text-secondary hover:text-white">&times;</button>
+        <div className="modal-overlay">
+            <div className="modal-content size-xl tall" style={{borderColor: '#60A5FA'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+                    <h2 className="font-serif" style={{fontSize: '1.5rem', fontWeight: 'bold', color: '#60A5FA'}}>Brainstorming Journal</h2>
+                    <button onClick={onClose} style={{fontSize: '1.5rem', color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer'}}>&times;</button>
                 </div>
 
-                <div className="flex border-b border-gray-700">
+                <div style={{display: 'flex', borderBottom: '1px solid var(--color-border)'}}>
                     {players.map(player => (
                         <button
                             key={player.id}
                             onClick={() => setActiveTab(player.id)}
-                            className={`py-2 px-4 font-semibold transition-colors ${
-                                activeTab === player.id 
-                                ? 'border-b-2 border-blue-400 text-blue-400' 
-                                : 'text-text-secondary hover:text-white'
-                            }`}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                fontWeight: 600,
+                                transition: 'color 0.2s, border-color 0.2s',
+                                borderBottom: activeTab === player.id ? '2px solid #60A5FA' : '2px solid transparent',
+                                color: activeTab === player.id ? '#60A5FA' : 'var(--color-text-secondary)',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer'
+                            }}
                         >
                             {player.name}
                         </button>
                     ))}
                 </div>
 
-                <div className="flex-grow overflow-y-auto mt-4 pr-2">
+                <div style={{flexGrow: 1, overflowY: 'auto', marginTop: '1rem', paddingRight: '0.5rem'}}>
                     {activeTab && (journal[activeTab] || []).length > 0 ? (
                         (journal[activeTab] || []).map((entry, index) => (
-                            <div key={index} className="bg-background p-4 rounded-lg mb-4 border border-gray-700">
-                                <p className="whitespace-pre-wrap font-serif text-text-secondary">{entry}</p>
+                            <div key={index} style={{backgroundColor: 'var(--color-background)', padding: '1rem', borderRadius: '0.5rem', marginBottom: '1rem', border: '1px solid var(--color-border)'}}>
+                                <p className="font-serif prose prose-invert">{entry}</p>
                             </div>
                         ))
                     ) : (
-                        <p className="text-text-secondary italic mt-4">No entries yet for this player.</p>
+                        <p style={{color: 'var(--color-text-secondary)', fontStyle: 'italic', marginTop: '1rem'}}>No entries yet for this player.</p>
                     )}
                 </div>
             </div>

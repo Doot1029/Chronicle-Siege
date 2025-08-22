@@ -16,37 +16,45 @@ const CharacterSwitcherModal: React.FC<CharacterSwitcherModalProps> = ({ player,
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-surface rounded-lg shadow-xl p-6 max-w-md w-full mx-4 animate-slide-in border-2 border-primary">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-primary font-serif flex items-center gap-2">
+    <div className="modal-overlay">
+      <div className="modal-content size-md">
+        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
+          <h2 className="font-serif" style={{fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
             <SwitchHorizontalIcon className="w-7 h-7" />
             Switch Character
           </h2>
-          <button onClick={onClose} className="text-2xl text-text-secondary hover:text-white">&times;</button>
+          <button onClick={onClose} style={{fontSize: '1.5rem', color: 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer'}}>&times;</button>
         </div>
 
-        <p className="text-text-secondary mb-4">Choose which character persona you want to write as for this turn.</p>
+        <p style={{color: 'var(--color-text-secondary)', marginBottom: '1rem'}}>Choose which character persona you want to write as for this turn.</p>
 
-        <div className="space-y-2">
+        <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
             {player.characters.map((char, index) => {
                 const isActive = index === player.activeCharacterIndex;
                 return (
                     <button
                         key={index}
                         onClick={() => handleSelect(index)}
-                        className={`w-full p-3 text-left rounded-lg transition-colors flex justify-between items-center ${
-                            isActive 
-                            ? 'bg-primary/30 border border-primary cursor-default' 
-                            : 'bg-background hover:bg-primary/10'
-                        }`}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            textAlign: 'left',
+                            borderRadius: '0.5rem',
+                            transition: 'background-color 0.2s, border-color 0.2s',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            border: `1px solid ${isActive ? 'var(--color-primary)' : 'transparent'}`,
+                            backgroundColor: isActive ? 'var(--color-primary_opacity_20, rgba(139, 92, 246, 0.2))' : 'var(--color-background)',
+                            cursor: isActive ? 'default' : 'pointer'
+                        }}
                         disabled={isActive}
                     >
                         <div>
-                            <p className="font-semibold">{char.name}</p>
-                            <p className="text-xs text-text-secondary italic">{char.bio || 'No bio.'}</p>
+                            <p style={{fontWeight: 600, color: 'var(--color-text-main)'}}>{char.name}</p>
+                            <p style={{fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontStyle: 'italic'}}>{char.bio || 'No bio.'}</p>
                         </div>
-                        {isActive && <PenIcon className="w-5 h-5 text-primary" />}
+                        {isActive && <PenIcon className="w-5 h-5" style={{color: 'var(--color-primary)'}} />}
                     </button>
                 )
             })}
