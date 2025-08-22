@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chronicle Siege</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'sans': ['"Inter"', 'sans-serif'],
+              'serif': ['"Lora"', 'serif'],
+              'mono': ['"Fira Code"', 'monospace'],
+            },
+            colors: {
+              'primary': 'var(--color-primary, #8B5CF6)',
+              'secondary': 'var(--color-secondary, #EC4899)',
+              'background': 'var(--color-background, #111827)',
+              'surface': 'var(--color-surface, #1F2937)',
+              'text-main': 'var(--color-text-main, #F9FAFB)',
+              'text-secondary': 'var(--color-text-secondary, #9CA3AF)',
+            },
+            animation: {
+              'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'slide-in': 'slideIn 0.5s ease-out forwards',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              },
+              slideIn: {
+                '0%': { transform: 'translateY(20px)', opacity: 0 },
+                '100%': { transform: 'translateY(0)', opacity: 1 },
+              },
+            },
+          },
+        },
+      }
+    </script>
+    <style>
+      .theme-midnight {
+        --color-primary: #8B5CF6;
+        --color-secondary: #EC4899;
+        --color-background: #111827;
+        --color-surface: #1F2937;
+        --color-text-main: #F9FAFB;
+        --color-text-secondary: #9CA3AF;
+      }
+      .theme-arcade {
+        --color-primary: #10B981;
+        --color-secondary: #F59E0B;
+        --color-background: #0D0C1D;
+        --color-surface: #1C1B2E;
+        --color-text-main: #FFFFFF;
+        --color-text-secondary: #A09FA D;
+      }
+      .theme-scroll {
+        --color-primary: #854D0E;
+        --color-secondary: #B91C1C;
+        --color-background: #FDF6E3;
+        --color-surface: #FBF1D5;
+        --color-text-main: #654F2D;
+        --color-text-secondary: #906C42;
+      }
+      .theme-solaris {
+        --color-primary: #3B82F6;
+        --color-secondary: #F97316;
+        --color-background: #F0F9FF;
+        --color-surface: #FFFFFF;
+        --color-text-main: #075985;
+        --color-text-secondary: #334155;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@discord/embedded-app-sdk@1/dist/bundle.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.15.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-background text-text-main font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
