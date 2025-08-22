@@ -1,14 +1,17 @@
 
-import React, { useState } from 'react';
-import type { GameSettings, Location, Character } from '../types';
+import React, { useState, useEffect } from 'react';
+import type { GameSettings, Location, Character, DiscordParticipant } from '../types';
 import { Difficulty, GameMode } from '../types';
 import { PenIcon, BookOpenIcon, SparklesIcon, LevelUpIcon } from './icons';
 
 interface GameSetupProps {
   onGameStart: (settings: GameSettings) => void;
+  isDiscord: boolean;
+  participants: DiscordParticipant[];
+  hostId: string | null;
 }
 
-const GameSetup: React.FC<GameSetupProps> = ({ onGameStart }) => {
+const GameSetup: React.FC<GameSetupProps> = ({ onGameStart, isDiscord, participants, hostId }) => {
   const [playerNames, setPlayerNames] = useState<string[]>(['Player 1']);
   const [characters, setCharacters] = useState<Record<string, Character[]>>({
     'Player 1': [{ name: 'Character Name', bio: 'A brave adventurer.' }]
@@ -24,6 +27,28 @@ Haunted Forest > Town Square, Whispering Caves
 Castle Gates > Town Square
 Whispering Caves > Haunted Forest`
   );
+
+  useEffect(() => {
+    if (isDiscord) {
+      setCharacters(prev => {
+        const newChars = { ...prev };
+        participants.forEach(p => {
+          const name = p.global_name || p.username;
+          if (!newChars[name]) {
+            newChars[name] = [{ name: 'New Hero', bio: '' }];
+          }
+        });
+        // Prune characters for users who left
+        const participantNames = new Set(participants.map(p => p.global_name || p.username));
+        for (const charName in newChars) {
+            if (!participantNames.has(charName)) {
+                delete newChars[charName];
+            }
+        }
+        return newChars;
+      });
+    }
+  }, [isDiscord, participants]);
 
   const handleAddPlayer = () => {
     const newPlayerName = `Player ${playerNames.length + 1}`;
@@ -101,7 +126,11 @@ Whispering Caves > Haunted Forest`
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const locations = parseLocations(locationsInput);
-    const finalPlayerNames = playerNames.filter(name => name.trim() !== '');
+    
+    const finalPlayerNames = isDiscord
+        ? participants.map(p => p.global_name || p.username)
+        : playerNames.filter(name => name.trim() !== '');
+
     const finalCharacters = Object.fromEntries(
         Object.entries(characters).filter(([name]) => finalPlayerNames.includes(name))
     );
@@ -120,6 +149,8 @@ Whispering Caves > Haunted Forest`
     });
   };
 
+  const isHost = true; // In setup, the user is always the host of the lobby.
+
   return (
     <div className="game-setup-wrapper animate-fade-in">
       <div className="game-setup-header">
@@ -130,7 +161,6 @@ Whispering Caves > Haunted Forest`
       <form onSubmit={handleSubmit} className="game-setup-form">
         <div className="game-setup-grid">
           
-          {/* Left/Main Column: Story Details */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <h2 className="game-setup-section-header">
               <BookOpenIcon className="w-6 h-6" />
@@ -143,14 +173,14 @@ Whispering Caves > Haunted Forest`
                 <textarea
                   id="storyPrompt" value={storyPrompt} onChange={(e) => setStoryPrompt(e.target.value)}
                   className="form-textarea font-serif"
-                  rows={6} />
+                  rows={6} disabled={isDiscord && !isHost} />
               </div>
               <div>
                 <label htmlFor="hostRules" className="form-label">Host Rules</label>
                 <textarea
                   id="hostRules" value={hostRules} onChange={(e) => setHostRules(e.target.value)}
                   className="form-textarea font-serif"
-                  rows={6} />
+                  rows={6} disabled={isDiscord && !isHost}/>
               </div>
             </div>
 
@@ -160,12 +190,11 @@ Whispering Caves > Haunted Forest`
                   id="locations" value={locationsInput} onChange={(e) => setLocationsInput(e.target.value)}
                   className="form-textarea font-mono"
                   style={{fontSize: '0.875rem'}}
-                  rows={5} placeholder={'e.g. Town > Forest, Castle'} />
+                  rows={5} placeholder={'e.g. Town > Forest, Castle'} disabled={isDiscord && !isHost}/>
               <p style={{fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem'}}>{'Format: `Location > Connection1, Connection2`.'}</p>
             </div>
           </div>
 
-          {/* Right Column: Players & Settings */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <div className="card">
               <h2 className="game-setup-section-header">
@@ -177,13 +206,13 @@ Whispering Caves > Haunted Forest`
                   <label htmlFor="goals" className="form-label">Main Goal / Task</label>
                   <input
                       type="text" id="goals" value={goals} onChange={(e) => setGoals(e.target.value)}
-                      className="form-input" />
+                      className="form-input" disabled={isDiscord && !isHost}/>
                 </div>
                 <div>
                   <label htmlFor="difficulty" className="form-label">Difficulty</label>
                   <select
                       id="difficulty" value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-                      className="form-select"
+                      className="form-select" disabled={isDiscord && !isHost}
                   >
                       {Object.values(Difficulty).map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
@@ -191,7 +220,7 @@ Whispering Caves > Haunted Forest`
                 <div>
                   <label htmlFor="gameModeDisplay" className="form-label">Game Mode</label>
                   <input
-                      type="text" id="gameModeDisplay" value={GameMode.OFFLINE}
+                      type="text" id="gameModeDisplay" value={isDiscord ? GameMode.DISCORD_ACTIVITY : GameMode.OFFLINE}
                       className="form-input" disabled style={{opacity: 0.7}}/>
                 </div>
               </div>
@@ -203,25 +232,48 @@ Whispering Caves > Haunted Forest`
                 <span>Players & Characters</span>
               </h2>
                  <div className="game-setup-player-list" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {playerNames.map((pName, pIndex) => (
-                      <div key={pIndex} className="game-setup-player-card">
-                          <input
-                              type="text" value={pName} onChange={(e) => handlePlayerNameChange(pIndex, e.target.value)}
-                              className="form-input"
-                              placeholder={`Player ${pIndex + 1} Name`}
-                          />
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                              {(characters[pName] || []).map((char, cIndex) => (
-                                   <div key={cIndex} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                      <input type="text" value={char.name} onChange={e => handleCharacterChange(pName, cIndex, 'name', e.target.value)} placeholder="Character Name" className="form-input" style={{fontSize: '0.875rem'}} />
-                                      <input type="text" value={char.bio} onChange={e => handleCharacterChange(pName, cIndex, 'bio', e.target.value)} placeholder="Bio / Description" className="form-input" style={{fontSize: '0.875rem'}} />
-                                  </div>
-                              ))}
+                  {isDiscord ? (
+                    participants.length > 0 ? participants.map(p => {
+                      const pName = p.global_name || p.username;
+                      return (
+                        <div key={p.id} className="game-setup-player-card">
+                          <div style={{display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+                            <img src={p.avatar || undefined} alt={p.username} style={{width: '2.5rem', height: '2.5rem', borderRadius: '50%'}}/>
+                            <div>
+                                <span style={{fontWeight: 600, color: 'var(--color-text-main)'}}>{pName}</span>
+                                {p.id === hostId && <span style={{fontSize: '0.75rem', backgroundColor: 'var(--color-primary)', color: 'white', padding: '0.1rem 0.4rem', borderRadius: '0.5rem', marginLeft: '0.5rem'}}>Host</span>}
+                                <p style={{fontSize: '0.75rem', color: 'var(--color-text-secondary)'}}>@{p.username}</p>
+                            </div>
                           </div>
-                          <button type="button" onClick={() => handleAddCharacter(pName)} style={{marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left'}}>+ Add Character</button>
-                      </div>
-                  ))}
-                   <button type="button" onClick={handleAddPlayer} style={{width: '100%', textAlign: 'center', padding: '0.5rem', border: '2px dashed var(--color-border)', color: 'var(--color-text-secondary)', borderRadius: '0.5rem'}}>+ Add Player</button>
+                          {(characters[pName] || []).map((char, cIndex) => (
+                              <div key={cIndex} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+                                <input type="text" value={char.name} onChange={e => handleCharacterChange(pName, cIndex, 'name', e.target.value)} placeholder="Character Name" className="form-input" style={{fontSize: '0.875rem'}} disabled={isDiscord && !isHost} />
+                                <input type="text" value={char.bio} onChange={e => handleCharacterChange(pName, cIndex, 'bio', e.target.value)} placeholder="Bio / Description" className="form-input" style={{fontSize: '0.875rem'}} disabled={isDiscord && !isHost} />
+                              </div>
+                          ))}
+                          {isHost && <button type="button" onClick={() => handleAddCharacter(pName)} style={{marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left'}}>+ Add Character</button>}
+                        </div>
+                      )
+                    }) : <p style={{textAlign: 'center', color: 'var(--color-text-secondary)'}}>Waiting for players to join...</p>
+                  ) : (
+                    <>
+                      {playerNames.map((pName, pIndex) => (
+                          <div key={pIndex} className="game-setup-player-card">
+                              <input type="text" value={pName} onChange={(e) => handlePlayerNameChange(pIndex, e.target.value)} className="form-input" placeholder={`Player ${pIndex + 1} Name`} />
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                  {(characters[pName] || []).map((char, cIndex) => (
+                                      <div key={cIndex} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                        <input type="text" value={char.name} onChange={e => handleCharacterChange(pName, cIndex, 'name', e.target.value)} placeholder="Character Name" className="form-input" style={{fontSize: '0.875rem'}} />
+                                        <input type="text" value={char.bio} onChange={e => handleCharacterChange(pName, cIndex, 'bio', e.target.value)} placeholder="Bio / Description" className="form-input" style={{fontSize: '0.875rem'}} />
+                                      </div>
+                                  ))}
+                              </div>
+                              <button type="button" onClick={() => handleAddCharacter(pName)} style={{marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left'}}>+ Add Character</button>
+                          </div>
+                      ))}
+                      <button type="button" onClick={handleAddPlayer} style={{width: '100%', textAlign: 'center', padding: '0.5rem', border: '2px dashed var(--color-border)', color: 'var(--color-text-secondary)', borderRadius: '0.5rem'}}>+ Add Player</button>
+                    </>
+                  )}
                 </div>
             </div>
           </div>
@@ -232,6 +284,7 @@ Whispering Caves > Haunted Forest`
             type="submit"
             className="btn btn-primary"
             style={{fontSize: '1.25rem'}}
+            disabled={isDiscord && (!isHost || participants.length === 0)}
           >
             <PenIcon className="w-6 h-6"/>
             <span>Begin the Chronicle</span>

@@ -52,7 +52,7 @@ const GameView: React.FC<GameViewProps> = ({
 
   const currentPlayer = gameState.settings.players[gameState.currentPlayerIndex];
   const isMyTurn = gameState.status === GameStatus.PLAYING;
-  const isHost = true;
+  const isHost = currentPlayer.id === gameState.hostId;
 
   const activeCharacter = currentPlayer.characters[currentPlayer.activeCharacterIndex];
   const previousPlayerIndex = (gameState.currentPlayerIndex - 1 + gameState.settings.players.length) % gameState.settings.players.length;

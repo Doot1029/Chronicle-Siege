@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import type { GameState, GameSettings, Player, Theme, Quest } from './types';
+import type { GameState, GameSettings, Player, Theme, Quest, DiscordParticipant } from './types';
 import { GameStatus } from './types';
 import GameSetup from './components/GameSetup';
 import GameView from './components/GameView';
@@ -9,39 +9,107 @@ import { THEMES } from './constants';
 import BrainstormJournalModal from './components/BrainstormJournalModal';
 import GameOverView from './components/GameOverView';
 import IntermissionView from './components/IntermissionView';
+import { DiscordSDK, Events } from '@discord/embedded-app-sdk';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [activeTheme, setActiveTheme] = useState<Theme>(THEMES[0]);
   const [showJournal, setShowJournal] = useState(false);
+  const [isDiscord, setIsDiscord] = useState(false);
+  const [participants, setParticipants] = useState<DiscordParticipant[]>([]);
+  const [hostId, setHostId] = useState<string | null>(null);
 
-  // Apply theme class to the body element for global styling
+  useEffect(() => {
+    const setupDiscord = async () => {
+      // DISCORD_CLIENT_ID must be set in the environment variables for this to work.
+      const clientId = process.env.DISCORD_CLIENT_ID;
+      if (!clientId) {
+          console.log("DISCORD_CLIENT_ID not set, running in offline mode.");
+          return;
+      }
+
+      try {
+          const discordSdk = new DiscordSDK(clientId);
+          await discordSdk.ready();
+          setIsDiscord(true);
+          
+          const initialParticipants = await discordSdk.commands.getInstanceConnectedParticipants();
+          
+          const formatParticipants = (participants: any[]): DiscordParticipant[] => {
+            return participants.map(p => ({
+              id: p.id,
+              username: p.username,
+              discriminator: p.discriminator,
+              global_name: p.global_name,
+              avatar: p.avatar ? `https://cdn.discordapp.com/avatars/${p.id}/${p.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${parseInt(p.discriminator) % 5}.png`
+            }));
+          }
+          
+          const formattedParticipants = formatParticipants(initialParticipants);
+          setParticipants(formattedParticipants);
+
+          if (formattedParticipants.length > 0) {
+              // Assumption: The first participant is the host/instance owner.
+              // A full OAuth flow is needed for a more robust host identification.
+              setHostId(formattedParticipants[0].id);
+          }
+
+          discordSdk.subscribe(Events.ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE, () => {
+              discordSdk.commands.getInstanceConnectedParticipants().then(updatedParticipants => {
+                   setParticipants(formatParticipants(updatedParticipants));
+              });
+          });
+      } catch (e) {
+          console.error("Failed to connect to Discord SDK:", e);
+      }
+    };
+    setupDiscord();
+  }, []);
+
   useEffect(() => {
     const body = document.body;
-    // Clean up previous theme classes from the body
     THEMES.forEach(theme => {
       body.classList.remove(theme.className);
     });
-    // Add the new active theme class
     body.classList.add(activeTheme.className);
   }, [activeTheme]);
 
   const handleGameStart = useCallback((settings: GameSettings) => {
-    const initialPlayers: Player[] = settings.playerNames.map((name, index) => ({
-      id: `p${index + 1}`,
-      name: name || `Player ${index + 1}`,
-      hearts: 3,
-      maxHearts: 3,
-      coins: 0,
-      level: 1,
-      experience: 0,
-      inventory: [],
-      theme: THEMES[0],
-      feedback: [],
-      characters: settings.initialCharacters[name || `Player ${index + 1}`] || [{ name: `Character ${index + 1}`, bio: '' }],
-      activeCharacterIndex: 0,
-      rebirthPoints: 0,
-    }));
+    let initialPlayers: Player[];
+
+    if (isDiscord) {
+        initialPlayers = participants.map((p, index) => ({
+            id: p.id,
+            name: p.global_name || p.username,
+            hearts: 3,
+            maxHearts: 3,
+            coins: 0,
+            level: 1,
+            experience: 0,
+            inventory: [],
+            theme: THEMES[0],
+            feedback: [],
+            characters: settings.initialCharacters[p.global_name || p.username] || [{ name: `Character ${index + 1}`, bio: '' }],
+            activeCharacterIndex: 0,
+            rebirthPoints: 0,
+        }));
+    } else {
+        initialPlayers = settings.playerNames.map((name, index) => ({
+          id: `p${index + 1}`,
+          name: name || `Player ${index + 1}`,
+          hearts: 3,
+          maxHearts: 3,
+          coins: 0,
+          level: 1,
+          experience: 0,
+          inventory: [],
+          theme: THEMES[0],
+          feedback: [],
+          characters: settings.initialCharacters[name || `Player ${index + 1}`] || [{ name: `Character ${index + 1}`, bio: '' }],
+          activeCharacterIndex: 0,
+          rebirthPoints: 0,
+        }));
+    }
     
     const startingLocationId = settings.locations.length > 0 ? settings.locations[0].id : '';
     const playerPositions = initialPlayers.reduce((acc, player) => {
@@ -68,8 +136,9 @@ const App: React.FC = () => {
       quests: [],
       storyBible: 'This is the story bible. The host can add important world-building details, character backstories, and established lore here.',
       limboState: null,
+      hostId: hostId,
     });
-  }, []);
+  }, [isDiscord, participants, hostId]);
 
   const handleOpenShop = useCallback(() => {
     if (gameState) {
@@ -203,7 +272,10 @@ const App: React.FC = () => {
     if (!gameState || gameState.status === GameStatus.SETUP) {
       return <GameSetup 
         onGameStart={handleGameStart} 
-        />;
+        isDiscord={isDiscord}
+        participants={participants}
+        hostId={hostId}
+      />;
     }
     
     if (gameState.status === GameStatus.GAME_OVER) {

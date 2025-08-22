@@ -19,6 +19,7 @@ export enum Difficulty {
 
 export enum GameMode {
     OFFLINE = 'Offline',
+    DISCORD_ACTIVITY = 'Discord Activity',
 }
 
 export interface Theme {
@@ -123,6 +124,14 @@ export interface Comment {
   timestamp: number;
 }
 
+export interface DiscordParticipant {
+    id: string;
+    username: string;
+    discriminator: string;
+    global_name: string | null;
+    avatar: string | null;
+}
+
 export interface GameState {
   status: GameStatus;
   settings: GameSettings;
@@ -137,4 +146,5 @@ export interface GameState {
   quests: Quest[];
   storyBible: string;
   limboState: LimboState | null;
+  hostId?: string | null;
 }
