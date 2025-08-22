@@ -28,6 +28,17 @@ const App: React.FC = () => {
   const [isHost, setIsHost] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Apply theme class to the body element for global styling
+  useEffect(() => {
+    const body = document.body;
+    // Clean up previous theme classes from the body
+    THEMES.forEach(theme => {
+      body.classList.remove(theme.className);
+    });
+    // Add the new active theme class
+    body.classList.add(activeTheme.className);
+  }, [activeTheme]);
+
   // Initialize Discord SDK and P2P connection
   useEffect(() => {
     const initOnlineMode = async () => {
@@ -334,7 +345,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen ${activeTheme.className}`}>
+    <div className="min-h-screen">
        {showJournal && gameState && (
         <BrainstormJournalModal 
             journal={gameState.brainstormingJournal} 
