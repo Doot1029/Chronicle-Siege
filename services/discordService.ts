@@ -8,7 +8,8 @@ declare global {
     }
 }
 
-// IMPORTANT: Replace this with your own Client ID from the Discord Developer Portal
+// IMPORTANT: You must replace this placeholder with your own Client ID
+// from the General Information page of your application in the Discord Developer Portal.
 const CLIENT_ID = '1408352859485114388';
 
 class DiscordService {

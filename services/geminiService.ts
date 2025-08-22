@@ -1,11 +1,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Monster } from '../types';
 
-if (!process.env.API_KEY) {
-  console.warn("API_KEY environment variable not set. Gemini API calls will fail.");
+// Safely access the API key to prevent browser crashes.
+// The build environment (e.g., Vercel, Netlify) must be configured to replace this variable.
+const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : "";
+
+if (!apiKey) {
+  console.warn("API_KEY environment variable not set or accessible in this environment. Gemini API calls will fail.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+const ai = new GoogleGenAI({ apiKey: apiKey! });
 
 type MonsterGenerationResponse = {
     name: string;
@@ -15,6 +19,9 @@ type MonsterGenerationResponse = {
 };
 
 export const generateMonster = async (storyContext: string): Promise<Omit<Monster, 'imageUrl' | 'currentHp' | 'locationId'>> => {
+  if (!apiKey) {
+    return { name: "Keyless Golem", description: "A creature formed from a missing API key.", maxHp: 100, attack: 10 };
+  }
   try {
     const prompt = `Based on this fantasy story excerpt, create a unique and challenging monster for the writers to fight.
     Story: "${storyContext.slice(-1000)}"
@@ -58,6 +65,7 @@ export const generateMonster = async (storyContext: string): Promise<Omit<Monste
 };
 
 export const generateMonsterImage = async (monsterDescription: string): Promise<string> => {
+    if (!apiKey) return "https://picsum.photos/512/512";
     try {
         const response = await ai.models.generateImages({
             model: 'imagen-3.0-generate-002',
@@ -81,6 +89,7 @@ export const generateMonsterImage = async (monsterDescription: string): Promise<
 };
 
 export const getAICritique = async (text: string): Promise<string> => {
+  if (!apiKey) return "The AI editor is offline. API key is missing.";
   if (!text.trim()) {
     return "There's nothing to critique yet. Write something first!";
   }
@@ -102,6 +111,7 @@ export const getAICritique = async (text: string): Promise<string> => {
 };
 
 export const isFeedbackConstructive = async (feedback: string): Promise<{ isConstructive: boolean; reason: string }> => {
+  if (!apiKey) return { isConstructive: true, reason: "AI validation offline." }; // Default to true if AI is down
   try {
     const prompt = `Analyze the following feedback from a writer for a collaborative writing game. Your goal is to be a relaxed moderator. Determine if the feedback is acceptable. Block only feedback that is clearly offensive, hateful, a personal attack, or nonsensical spam. Allow subjective opinions and brief comments. Respond with JSON, setting 'isConstructive' to true if it's acceptable.
 
@@ -134,6 +144,7 @@ export const isFeedbackConstructive = async (feedback: string): Promise<{ isCons
 };
 
 export const getInspirationWord = async (storyContext: string): Promise<string> => {
+    if (!apiKey) return "Hope";
     try {
         const prompt = `Based on the following fantasy story context, provide a single, evocative, and inspiring word to help a writer continue.
         Story: "${storyContext.slice(-500)}"`;
@@ -152,6 +163,7 @@ export const getInspirationWord = async (storyContext: string): Promise<string> 
 };
 
 export const highlightComplexSentences = async (text: string): Promise<string> => {
+    if (!apiKey) return "The analysis tool is offline. API key is missing.";
     if (!text.trim()) {
         return "There's no text to analyze.";
     }
