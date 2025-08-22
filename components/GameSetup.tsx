@@ -157,8 +157,8 @@ Whispering Caves > Haunted Forest`
             <textarea
                 id="locations" value={locationsInput} onChange={(e) => setLocationsInput(e.target.value)}
                 className="w-full p-3 bg-background border border-gray-600 rounded-lg focus:ring-2 focus:ring-primary font-mono text-sm disabled:opacity-70"
-                rows={5} placeholder="e.g. Town > Forest, Castle" disabled={!canSubmit}/>
-            <p className="text-xs text-text-secondary mt-1">Format: `Location > Connection1, Connection2`.</p>
+                rows={5} placeholder={'e.g. Town > Forest, Castle'} disabled={!canSubmit}/>
+            <p className="text-xs text-text-secondary mt-1">{'Format: `Location > Connection1, Connection2`.'}</p>
           </div>
           <div>
             <label htmlFor="goals" className="block text-lg font-semibold mb-2 text-secondary">Main Goal / Task</label>
