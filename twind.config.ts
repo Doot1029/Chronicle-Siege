@@ -1,6 +1,4 @@
-import { install } from 'https://cdn.twind.style';
-
-install({
+export const twindConfig = {
   theme: {
     extend: {
       fontFamily: {
@@ -33,4 +31,4 @@ install({
       },
     },
   },
-});
+};

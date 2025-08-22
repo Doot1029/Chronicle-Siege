@@ -5,8 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chronicle Siege</title>
-    <!-- The Twind setup is now handled by the external config file to be CSP-compliant -->
-    <script type="module" src="/twind.config.ts"></script>
+    <!-- Twind setup is now handled within the main TSX entry point -->
     <style>
       .theme-midnight {
         --color-primary: #8B5CF6;
@@ -51,7 +50,8 @@
     "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
     "react/": "https://esm.sh/react@^19.1.1/",
     "react": "https://esm.sh/react@^19.1.1",
-    "@google/genai": "https://esm.sh/@google/genai@^1.15.0"
+    "@google/genai": "https://esm.sh/@google/genai@^1.15.0",
+    "twind": "https://unpkg.com/twind@0.16.19/dist/twind.esm.js"
   }
 }
 </script>
